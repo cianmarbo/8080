@@ -218,6 +218,198 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 	case 0x3F:
 		printf("CMC\n");
 		break;
+	case 0x40:
+		printf("MOV   B, B\n");
+		break;
+	case 0x41:
+		printf("MOV   B, C\n");
+		break;
+	case 0x42:
+		printf("MOV   B, D\n");
+		break;
+	case 0x43:
+		printf("MOV   B, E\n");
+		break;
+	case 0x44:
+		printf("MOV   B, H\n");
+		break;
+	case 0x45:
+		printf("MOV   B, L\n");
+		break;
+	case 0x46:
+		printf("MOV   B, M\n");
+		break;
+	case 0x47:
+		printf("MOV   B, A\n");
+		break;
+	case 0x48:
+		printf("MOV   C, B\n");
+		break;
+	case 0x49:
+		printf("MOV   C, C\n");
+		break;
+	case 0x4A:
+		printf("MOV   C, D\n");
+		break;
+	case 0x4B:
+		printf("MOV   C, E\n");
+		break;
+	case 0x4C:
+		printf("MOV   C, H\n");
+		break;
+	case 0x4D:
+		printf("MOV   C, L\n");
+		break;
+	case 0x4E:
+		printf("MOV   C, M\n");
+		break;
+	case 0x4F:
+		printf("MOV   C, A\n");
+		break;
+	case 0x50:
+		printf("MOV   D, B\n");
+		break;
+	case 0x51:
+		printf("MOV   D, C\n");
+		break;
+	case 0x52:
+		printf("MOV   D, D\n");
+		break;
+	case 0x53:
+		printf("MOV   D, E\n");
+		break;
+	case 0x54:
+		printf("MOV   D, H\n");
+		break;
+	case 0x55:
+		printf("MOV   D, L\n");
+		break;
+	case 0x56:
+		printf("MOV   D, M\n");
+		break;
+	case 0x57:
+		printf("MOV   D, A\n");
+		break;
+	case 0x58:
+		printf("MOV   E, B\n");
+		break;
+	case 0x59:
+		printf("MOV   E, C\n");
+		break;
+	case 0x5A:
+		printf("MOV   E, D\n");
+		break;
+	case 0x5B:
+		printf("MOV   E, E\n");
+		break;
+	case 0x5C:
+		printf("MOV   E, H\n");
+		break;
+	case 0x5D:
+		printf("MOV   E, L\n");
+		break;
+	case 0x5E:
+		printf("MOV   E, M\n");
+		break;
+	case 0x5F:
+		printf("MOV   E, A\n");
+		break;
+	case 0x60:
+		printf("MOV   H, B\n");
+		break;
+	case 0x61:
+		printf("MOV   H, C\n");
+		break;
+	case 0x62:
+		printf("MOV   H, D\n");
+		break;
+	case 0x63:
+		printf("MOV   H, E\n");
+		break;
+	case 0x64:
+		printf("MOV   H, H\n");
+		break;
+	case 0x65:
+		printf("MOV   H, L\n");
+		break;
+	case 0x66:
+		printf("MOV   H, M\n");
+		break;
+	case 0x67:
+		printf("MOV   H, A\n");
+		break;
+	case 0x68:
+		printf("MOV   L, B\n");
+		break;
+	case 0x69:
+		printf("MOV   L, C\n");
+		break;
+	case 0x6A:
+		printf("MOV   L, D\n");
+		break;
+	case 0x6B:
+		printf("MOV   L, E\n");
+		break;
+	case 0x6C:
+		printf("MOV   L, H\n");
+		break;
+	case 0x6D:
+		printf("MOV   L, L\n");
+		break;
+	case 0x6E:
+		printf("MOV   L, M\n");
+		break;
+	case 0x6F:
+		printf("MOV   L, A\n");
+		break;
+	case 0x70:
+		printf("MOV   M, B\n");
+		break;
+	case 0x71:
+		printf("MOV   M, C\n");
+		break;
+	case 0x72:
+		printf("MOV   M, D\n");
+		break;
+	case 0x73:
+		printf("MOV   M, E\n");
+		break;
+	case 0x74:
+		printf("MOV   M, H\n");
+		break;
+	case 0x75:
+		printf("MOV   M, L\n");
+		break;
+	case 0x76:
+		printf("MOV   M, M\n");
+		break;
+	case 0x77:
+		printf("MOV   M, A\n");
+		break;
+	case 0x78:
+		printf("MOV   A, B\n");
+		break;
+	case 0x79:
+		printf("MOV   A, C\n");
+		break;
+	case 0x7A:
+		printf("MOV   A, D\n");
+		break;
+	case 0x7B:
+		printf("MOV   A, E\n");
+		break;
+	case 0x7C:
+		printf("MOV   A, H\n");
+		break;
+	case 0x7D:
+		printf("MOV   A, L\n");
+		break;
+	case 0x7E:
+		printf("MOV   A, M\n");
+		break;
+	case 0x7F:
+		printf("MOV   A, A\n");
+		break;
 	default:
 		printf("Unhandled Instruction....\n");
 		break;
@@ -266,11 +458,13 @@ int main(int argc, char** argv) {
 	if(!rom_file) {
 		printf("please point to a valid ROM...\n");
 		exit(0);
-	}
+	} 
 
 	fseek(rom_file, 0, SEEK_END);
 	int file_size = ftell(rom_file);
 	rewind(rom_file);
+
+	printf("\nFile size......%d\n", file_size);
 
 	uint8_t* rom_buffer = (uint8_t*) malloc(file_size);
 

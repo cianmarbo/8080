@@ -410,6 +410,144 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 	case 0x7F:
 		printf("MOV   A, A\n");
 		break;
+	case 0x80:
+		printf("ADD   B\n");
+		break;
+	case 0x81:
+		printf("ADD   C\n");
+		break;
+	case 0x82:
+		printf("ADD   D\n");
+		break;
+	case 0x83:
+		printf("ADD   E\n");
+		break;
+	case 0x84:
+		printf("ADD   H\n");
+		break;
+	case 0x85:
+		printf("ADD   L\n");
+		break;
+	case 0x86:
+		printf("ADD   M\n");
+		break;
+	case 0x87:
+		printf("ADD   A\n");
+		break;
+	case 0x8A:
+		printf("ADC   B\n");
+		break;
+	case 0x8B:
+		printf("ADC   C\n");
+		break;
+	case 0x8C:
+		printf("ADC   D\n");
+		break;
+	case 0x8D:
+		printf("ADC   E\n");
+		break;
+	case 0x8E:
+		printf("ADC   H\n");
+		break;
+	case 0x8F:
+		printf("ADC   A\n");
+		break;
+	case 0x90:
+		printf("SUB   B\n");
+		break;
+	case 0x91:
+		printf("SUB   C\n");
+		break;
+	case 0x92:
+		printf("SUB   D\n");
+		break;
+	case 0x93:
+		printf("SUB   E\n");
+		break;
+	case 0x94:
+		printf("SUB   H\n");
+		break;
+	case 0x95:
+		printf("SUB   L\n");
+		break;
+	case 0x96:
+		printf("SUB   M\n");
+		break;
+	case 0x97:
+		printf("SUB   A\n");
+		break;
+	case 0x98:
+		printf("SBB   B\n");
+		break;
+	case 0x99:
+		printf("SBB   C\n");
+		break;
+	case 0x9A:
+		printf("SBB   D\n");
+		break;
+	case 0x9B:
+		printf("SBB   E\n");
+		break;
+	case 0x9C:
+		printf("SBB   H\n");
+		break;
+	case 0x9D:
+		printf("SBB   L\n");
+		break;
+	case 0x9E:
+		printf("SBB   M\n");
+		break;
+	case 0x9F:
+		printf("SBB   A\n");
+		break;
+	case 0xA0:
+		printf("ANA   B\n");
+		break;
+	case 0xA1:
+		printf("ANA   C\n");
+		break;
+	case 0xA2:
+		printf("ANA   D\n");
+		break;
+	case 0xA3:
+		printf("ANA   E\n");
+		break;
+	case 0xA4:
+		printf("ANA   H\n");
+		break;
+	case 0xA5:
+		printf("ANA   L\n");
+		break;
+	case 0xA6:
+		printf("ANA   M\n");
+		break;
+	case 0xA7:
+		printf("ANA   A\n");
+		break;
+	case 0xA8:
+		printf("XRA   B\n");
+		break;
+	case 0xA9:
+		printf("XRA   C\n");
+		break;
+	case 0xAA:
+		printf("XRA   D\n");
+		break;
+	case 0xAB:
+		printf("XRA   E\n");
+		break;
+	case 0xAC:
+		printf("XRA   H\n");
+		break;
+	case 0xAD:
+		printf("XRA   L\n");
+		break;
+	case 0xAE:
+		printf("XRA   M\n");
+		break;
+	case 0xAF:
+		printf("XRA   A\n");
+		break;
 	default:
 		printf("Unhandled Instruction....\n");
 		break;

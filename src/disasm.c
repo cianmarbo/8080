@@ -548,6 +548,54 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 	case 0xAF:
 		printf("XRA   A\n");
 		break;
+	case 0xB0:
+		printf("ORA   B\n");
+		break;
+	case 0xB1:
+		printf("ORA   C\n");
+		break;
+	case 0xB2:
+		printf("ORA   D\n");
+		break;
+	case 0xB3:
+		printf("ORA   E\n");
+		break;
+	case 0xB4:
+		printf("ORA   H\n");
+		break;
+	case 0xB5:
+		printf("ORA   L\n");
+		break;
+	case 0xB6:
+		printf("ORA   M\n");
+		break;
+	case 0xB7:
+		printf("ORA   A\n");
+		break;
+	case 0xB8:
+		printf("CMP   B\n");
+		break;
+	case 0xB9:
+		printf("CMP   C\n");
+		break;
+	case 0xBA:
+		printf("CMP   D\n");
+		break;
+	case 0xBB:
+		printf("CMP   E\n");
+		break;
+	case 0xBC:
+		printf("CMP   H\n");
+		break;
+	case 0xBD:
+		printf("CMP   L\n");
+		break;
+	case 0xBE:
+		printf("CMP   M\n");
+		break;
+	case 0xBF:
+		printf("CMP   A\n");
+		break;
 	default:
 		printf("Unhandled Instruction....\n");
 		break;

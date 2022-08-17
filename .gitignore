@@ -1,3 +1,6 @@
 
 src/.DS_Store
 .DS_Store
+.vscode/dryrun.log
+.vscode/configurationCache.log
+.vscode/targets.log

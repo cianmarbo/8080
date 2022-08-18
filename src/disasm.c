@@ -596,6 +596,55 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 	case 0xBF:
 		printf("CMP   A\n");
 		break;
+	case 0xC0:
+		printf("RNZ\n");
+		break;
+	case 0xC1:
+		printf("POP   B\n");
+		break;
+	case 0xC2:
+		printf("JNZ   %02x%02x\n", code[2], code[1]);
+		op_bytes = 3;
+		break;
+	case 0xC3:
+		printf("JMP   %02x%02x\n", code[2], code[1]);
+		op_bytes = 3;
+		break;
+	case 0xC4:
+		printf("CNZ   %02x%02x\n", code[2], code[1]);
+		op_bytes = 3;
+		break;
+	case 0xC5:
+		printf("PUSH  B\n");
+		break;
+	case 0xC6:
+		printf("ADI   %02x\n", code[1]);
+		op_bytes = 2;
+		break;
+	case 0xC7:
+		printf("RST   0\n");
+		break;
+	case 0xC8:
+		printf("RZ\n");
+		break;
+	case 0xC9:
+		printf("RET\n");
+		break;
+	case 0xCA:
+		printf("JZ   %02x%02x\n", code[2], code[1]);
+		op_bytes = 3;
+		break;
+	case 0xCB:
+		printf("JMP  %02x%02x\n", code[2], code[1]);
+		break;
+	case 0xCC:
+		printf("CZ   %02x%02x\n", code[2], code[1]);
+		break;
+	case 0xCD:
+		printf("CALL %02x%02x\n", code[2], code[1]);
+		break;
+	case 0xCE:
+		
 	default:
 		printf("Unhandled Instruction....\n");
 		break;

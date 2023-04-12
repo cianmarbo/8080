@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+
+#define MAX_INTRO_LINES 14
+#define MAX_INTRO_CHARS 50
+
+static int file_size;
 
 uint8_t disassemble(uint8_t* code_buffer, int pc) {
 
@@ -56,7 +62,7 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		printf("DCR    C\n");
 		break;
 	case 0xE:
-		printf("MVI    C, %02x\n", code[1]);
+		printf("MVI     C, %02x\n", code[1]);
 		op_bytes = 2;
 		break;
 	case 0xF:
@@ -66,23 +72,23 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		printf("NOP\n");
 		break;
 	case 0x11:
-		printf("LXI    D, %02x%02x\n", code[2], code[1]);
+		printf("LXI     D, %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0x12:
-		printf("STAX   D\n");
+		printf("STAX    D\n");
 		break;
 	case 0x13:
-		printf("INX    D\n");
+		printf("INX     D\n");
 		break;
 	case 0x14:
-		printf("INR    D\n");
+		printf("INR     D\n");
 		break;
 	case 0x15:
-		printf("DCR    D\n");
+		printf("DCR     D\n");
 		break;
 	case 0x16:
-		printf("MVI    D, %02x\n", code[1]);
+		printf("MVI     D, %02x\n", code[1]);
 		op_bytes = 2;
 		break;
 	case 0x17:
@@ -616,7 +622,7 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		op_bytes = 3;
 		break;
 	case 0xC5:
-		printf("PUSH  B\n");
+		printf("PUSH   B\n");
 		break;
 	case 0xC6:
 		printf("ADI   %02x\n", code[1]);
@@ -636,7 +642,7 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		op_bytes = 3;
 		break;
 	case 0xCB:
-		printf("JMP  %02x%02x\n", code[2], code[1]);
+		printf("JMP   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xCC:
@@ -644,31 +650,31 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		op_bytes = 3;
 		break;
 	case 0xCD:
-		printf("CALL %02x%02x\n", code[2], code[1]);
+		printf("CALL   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xCE:
-		printf("ACI  %02x\n", code[1]);
+		printf("ACI   %02x\n", code[1]);
 		op_bytes = 2;
 	case 0xCF:
-		printf("RST  1\n");
+		printf("RST   1\n");
 		break;
 	case 0xD0:
 		printf("RNC\n");
 		break;
 	case 0xD1:
-		printf("POP  D\n");
+		printf("POP   D\n");
 		break;
 	case 0xD2:
-		printf("JNC    %02x%02x\n", code[2], code[1]);
+		printf("JNC   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xD3:
-		printf("OUT    %02x\n", code[1]);
+		printf("OUT   %02x\n", code[1]);
 		op_bytes = 2;
 		break;
 	case 0xD4:
-		printf("CNC    %02x%02x\n", code[2], code[1]);
+		printf("CNC   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xD5:
@@ -679,7 +685,7 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		op_bytes = 2;
 		break;
 	case 0xD7:
-		printf("RST    2\n");
+		printf("RST   2\n");
 		break;
 	case 0xD8:
 		printf("RC\n");
@@ -688,7 +694,7 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		printf("RET\n");
 		break;
 	case 0xDA:
-		printf("JC    %02x%02x\n", code[2], code[1]);
+		printf("JC   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xDB:
@@ -696,15 +702,15 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		op_bytes = 2;
 		break;
 	case 0xDC:
-		printf("CC    %02x%02x\n", code[2], code[1]);
+		printf("CC   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xDD:
-		printf("CALL    %02x%02x\n", code[2], code[1]);
+		printf("CALL   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xDE:
-		printf("SBI    %02x\n", code[1]);
+		printf("SBI   %02x\n", code[1]);
 		op_bytes = 2;
 		break;
 	case 0xDF:
@@ -714,7 +720,7 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		printf("RPO\n");
 		break;
 	case 0xE1:
-		printf("POP    H\n");
+		printf("POP   H\n");
 		break;
 	case 0xE2:
 		printf("JPO   %02x%02x\n", code[2], code[1]);
@@ -724,18 +730,18 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		printf("XTHL\n");
 		break;
 	case 0xE4:
-		printf("CPO     %02x%02x\n", code[2], code[1]);
+		printf("CPO   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xE5:
-		printf("PUSH     H\n");
+		printf("PUSH   H\n");
 		break;
 	case 0xE6:
-		printf("ANI    %02x\n", code[1]);
+		printf("ANI   %02x\n", code[1]);
 		op_bytes = 2;
 		break;
 	case 0xE7:
-		printf("RST    4\n");
+		printf("RST   4\n");
 		break;
 	case 0xE8:
 		printf("RPE\n");
@@ -751,28 +757,28 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		printf("XCHG\n");
 		break;
 	case 0xEC:
-		printf("CPE    %02x%02x\n", code[2], code[1]);
+		printf("CPE   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xED:
-		printf("CALL    %02x%02x\n", code[2], code[1]);
+		printf("CALL   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xEE:
-		printf("XRI    %02x\n", code[1]);
+		printf("XRI   %02x\n", code[1]);
 		op_bytes = 2;
 		break;
 	case 0xEF:
-		printf("RST    5\n");
+		printf("RST   5\n");
 		break;
 	case 0xF0:
 		printf("RP\n");
 		break;
 	case 0xF1:
-		printf("POP    PSW\n");
+		printf("POP   PSW\n");
 		break;
 	case 0xF2:
-		printf("JP    %02x%02x\n", code[2], code[1]);
+		printf("JP   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xF3:
@@ -786,11 +792,11 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		printf("PUSH   PSW\n");
 		break;
 	case 0xF6:
-		printf("ORI    %02x\n", code[1]);
+		printf("ORI   %02x\n", code[1]);
 		op_bytes = 2;
 		break;
 	case 0xF7:
-		printf("RST    6\n");
+		printf("RST   6\n");
 		break;
 	case 0xF8:
 		printf("RM\n");
@@ -799,76 +805,62 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 		printf("SPHL\n");
 		break;
 	case 0xFA:
-		printf("JM    %02x%02x\n", code[2], code[1]);
+		printf("JM   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xFB:
 		printf("EI\n");
 		break;
 	case 0xFC:
-		printf("CM    %02x%02x\n", code[2], code[1]);
+		printf("CM   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xFD:
-		printf("CALL    %02x%02x\n", code[2], code[1]);
+		printf("CALL   %02x%02x\n", code[2], code[1]);
 		op_bytes = 3;
 		break;
 	case 0xFE:
-		printf("CPI    %02x\n", code[1]);
+		printf("CPI   %02x\n", code[1]);
 		op_bytes = 2;
 		break;
 	case 0xFF:
-		printf("RST    7\n");
+		printf("RST   7\n");
 		break;
-
 	default:
 		printf("Unhandled Instruction....\n");
 		break;
 	}
 
 	return op_bytes;
+}
 
-} 
+void display_intro() {
 
-int main(int argc, char** argv) {
+	char intro_array[MAX_INTRO_LINES][MAX_INTRO_CHARS];
+	int intro_array_count = 0;
 
-	char* array[7];
+	FILE* intro_file = fopen("intro.txt", "r");
 
-	/*
+	if(intro_file) {
+		while(fgets(intro_array[intro_array_count], MAX_INTRO_CHARS, intro_file) != NULL) {
+			intro_array_count++;
+			
+			if(intro_array_count == MAX_INTRO_LINES) {
+				break;
+			}
+		}
 
-	array[0] = " ________  ________  ________  ________      \n";
-	array[1] = "|\   __  \|\   __  \|\   __  \|\   __  \     \n";
-	array[2] = "\ \  \|\  \ \  \|\  \ \  \|\  \ \  \|\  \    \n";
-	array[3] = " \ \   __  \ \  \\\  \ \   __  \ \  \\\  \   \n";
-	array[4] = "  \ \  \|\  \ \  \\\  \ \  \|\  \ \  \\\  \  \n";
-	array[5] = "   \ \_______\ \_______\ \_______\ \_______\ \n";
-	array[6] = "    \|_______|\|_______|\|_______|\|_______| \n";
-
-	*/
-
-	array[0] = " ________  ________  ________  ________                       \n";
-	array[1] = "|\\   __  \\|\\   __  \\|\\   __  \\|\\   __  \\              \n";
-	array[2] = "\\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\    \n";
-	array[3] = " \\ \\   __  \\ \\  \\|\\  \\ \\   __  \\ \\  \\|\\  \\         \n";
-	array[4] = "  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\    \n";
-	array[5] = "   \\ \\_______\\ \\_______\\ \\_______\\ \\_______\\         \n";
-	array[6] = "    \\|_______|\\|_______|\\|_______|\\|_______|              \n";
-
-	
-
-	for(int i = 0; i < 7; i++) {
-		printf("%s", array[i]);
+		for(int i = 0; i < intro_array_count; i++) {
+			printf("%s", intro_array[i]);
+		}
 	}
 
-	printf("\nwelcome to eighty eighty, an Intel 8080 disassembler!\n");
-	printf("------------by cianmarbo\n");
-	printf("\nmake sure your rom is valid ;)\n");
+	fclose(intro_file);
+}
 
-	if(argc < 2) {
-		printf("usage: [romfile]\n");
-	}
+uint8_t* open_rom(char* fileName) {
 
-	FILE* rom_file = fopen(argv[1], "r");
+	FILE* rom_file = fopen(fileName, "r");
 
 	if(!rom_file) {
 		printf("please point to a valid ROM...\n");
@@ -878,17 +870,31 @@ int main(int argc, char** argv) {
 	//set the file position indicator to the end of the file (measured in bytes)
 	fseek(rom_file, 0, SEEK_END);
 	//get the file position indicator to store the size of the file in bytes
-	int file_size = ftell(rom_file);
+	file_size = ftell(rom_file);
 	//set the file position indicator to the beginning of the file
 	rewind(rom_file);
-	//print the file size
-	printf("\nFile size.......%d\n", file_size);
-	printf("---------------------\n");
 
 	uint8_t* rom_buffer = (uint8_t*) malloc(file_size);
 
 	fread(rom_buffer, file_size, 1, rom_file);
 	fclose(rom_file);
+
+	return rom_buffer;
+}
+
+int main(int argc, char** argv) {
+
+	display_intro();
+
+	if(argc < 2) {
+		printf("usage: [romfile]\n");
+	}
+
+	uint8_t* rom_buffer = open_rom(argv[1]);
+
+	if((argv[2] != NULL) && (strcmp(argv[2], "-v")) == 0) {
+		printf("File size.......%d\n", file_size);
+	}
 
 	unsigned int pc = 0;
 

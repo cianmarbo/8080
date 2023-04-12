@@ -1,2 +1,2 @@
 # 8080
- An Intel 8080 disassmbler and emulator
+ An Intel 8080 disassembler and emulator

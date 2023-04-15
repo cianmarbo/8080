@@ -36,8 +36,31 @@ struct cpu {
 typedef struct cpu cpu;
 
 void emulate(cpu* state) {
+    
+    uint8_t* instruction = state->memory[state->PC];
 
+    switch(*instruction) {
+        case 0x00:
+            state->PC += 1;
+            break;
+        case 0x01:
+            break;
+        case 0x82:
+            uint16_t result = (uint16_t)state->A + (uint16_t)state->D;
+
+            state->cond.zero = (result & 0xff) ? 0 : 1;
+            state->cond.sign = (result & 0x80) ? 1 : 0;
+            state->cond.carry = (result > 0xff) ? 1 : 0;
+
+            state->A = result & 0xff;
+
+            break;
+        default:
+            break;
+    }
 }
+
+
 
 cpu* init_cpu(void) {
 

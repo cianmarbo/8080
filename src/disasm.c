@@ -441,20 +441,26 @@ uint8_t disassemble(uint8_t* code_buffer, int pc) {
 	case 0x87:
 		printf("ADD   A\n");
 		break;
-	case 0x8A:
+	case 0x88:
 		printf("ADC   B\n");
 		break;
-	case 0x8B:
+	case 0x89:
 		printf("ADC   C\n");
 		break;
-	case 0x8C:
+	case 0x8A:
 		printf("ADC   D\n");
 		break;
-	case 0x8D:
+	case 0x8B:
 		printf("ADC   E\n");
 		break;
-	case 0x8E:
+	case 0x8C:
 		printf("ADC   H\n");
+		break;
+	case 0x8D:
+		printf("ADC   L\n");
+		break;
+	case 0x8E:
+		printf("ADC   M\n");
 		break;
 	case 0x8F:
 		printf("ADC   A\n");

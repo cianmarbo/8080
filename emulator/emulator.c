@@ -43,6 +43,40 @@ struct cpu {
 
 typedef struct cpu cpu;
 
+static void ADD(cpu* state, uint8_t* operand) {
+
+    uint16_t result = (uint16_t)state->A + (uint16_t)operand;
+
+    state->cond.zero = (result & 0xff) ? 0 : 1;
+    state->cond.sign = (result & 0x80) ? 1 : 0;
+    state->cond.carry = (result > 0xff) ? 1 : 0;
+
+    // assign result by doing bitwise AND on 0xff (255 base 10) to prevent overflow
+    state->A = result & 0xff;
+}
+
+static void ADC(cpu* state, uint8_t* operand) {
+
+    uint16_t result = (uint16_t)state->A + (uint16_t)operand + state->cond.carry;
+
+    state->cond.zero = (result & 0xff) ? 0 : 1;
+    state->cond.sign = (result & 0x80) ? 1 : 0;
+    state->cond.carry = (result > 0xff) ? 1 : 0;
+
+    state->A = result & 0xff;
+}
+
+static void SUB(cpu* state, uint8_t* operand) {
+
+    uint16_t result = (uint16_t)state->A - (uint16_t)operand;
+
+    state->cond.zero = (result & 0xff) ? 0 : 1;
+    state->cond.sign = (result & 0x80) ? 1 : 0;
+    state->cond.carry = (result > 0xff) ? 0 : 1;
+
+    state->A = result & 0xff;
+}
+
 void execute(cpu* state) {
     
     uint8_t* instruction = &state->memory[state->PC];
@@ -58,251 +92,148 @@ void execute(cpu* state) {
             break;
         case 0x01:
             break;
+        //BEGIN MOV GROUP
+        case 0x40:
+            //MOV B, B
+            state->B = state->B;
+            break;
+        case 0x41:
+            //MOV B, C
+            state->B = state->C;
+            break;
+        case 0x42:
+            state->B = state->D;
+            break;
+        case 0x43:
+            state->B = state->E;
+            break;
+        case 0x44:
+            state->B = state->H;
+            break;
+        case 0x45:
+            state->B = state->L;
+            break;
+        case 0x46:
+            memory_offset = (state->H) << 8 + state->L;
+            state->B = state->memory[memory_offset];
+            break;
+        case 0x47:
+            state->B = state->A;
+            break;
+        case 0x48:
+            state->C = state->B;
+            break;
+        case 0x49:
+            state->C = state->C;
+            break;
+        case 0x4A:
+            state->C = state->D;
+            break;
+        case 0x4B:
+            state->C = state->E;
+            break;
+        case 0x4C:
+            state->C = state->H;
+            break;
         //BEGIN ADDITION GROUP
         case 0x80:
-            //ADD B
-            result = (uint16_t)state->A + (uint16_t)state->B;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            // assign result by doing bitwise AND on 0xff (255 base 10) to prevent overflow
-            state->A = result & 0xff;
+            ADD(state, state->B);
             break;
         case 0x81:
             // ADD C
-            result = (uint16_t)state->A + (uint16_t)state->C;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADD(state, state->C);
             break;
         case 0x82:
             //ADD D
-            result = (uint16_t)state->A + (uint16_t)state->D;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADD(state, state->D);
             break;
         case 0x83:
             //ADD E
-            result = (uint16_t)state->A + (uint16_t)state->E;
-            
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADD(state, state->E);
             break;
         case 0x84:
             //ADD H
-            result = (uint16_t)state->A + (uint16_t)state->H;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADD(state, state->H);
             break;
         case 0x85:
             //ADD L
-            result = (uint16_t)state->A + (uint16_t)state->L;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADD(state, state->L);
             break;
         case 0x86:
             //ADD M (memory address referenced by combo of H and L)
             memory_offset = (state->H << 8) + state->L;
-            result = (uint16_t)state->A + (uint16_t)state->memory[memory_offset];
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADD(state, state->memory[memory_offset]);
             break;
         case 0x87:
             // ADD A
-            result = (uint16_t)state->A + (uint16_t)state->A;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADD(state, state->A);
             break;
         case 0x88:
             //ADC B
-            result = (uint16_t)state->A + (uint16_t)state->B + state->cond.carry;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADC(state, state->B);
             break;
         case 0x89:
             //ADC C
-            result = (uint16_t)state->A + (uint16_t)state->C + state->cond.carry;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADC(state, state->C);
             break;
         case 0x8A:
             //ADC D
-            result = (uint16_t)state->A + (uint16_t)state->D + state->cond.carry;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADC(state, state->D);
             break;
         case 0x8B:
             //ADC E
-            result = (uint16_t)state->A + (uint16_t)state->E + state->cond.carry;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADC(state, state->E);
             break;
         case 0x8C:
             //ADC H
-            result = (uint16_t)state->A + (uint16_t)state->H + state->cond.carry;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADC(state, state->H);
             break;
         case 0x8D:
             //ADC L
-            result = (uint16_t)state->A + (uint16_t)state->L + state->cond.carry;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADC(state, state->L);
             break;
         case 0x8E:
             //ADC M (memory address made up of H + L combo)
             memory_offset = (state->H << 8) + state->L;
-            result = (uint16_t)state->A + (uint16_t)state->memory[memory_offset] + state->cond.carry;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADC(state, state->memory[memory_offset]);
             break;
         case 0x8F:
             //ADC A
-            result = (uint16_t)state->A + (uint16_t)state->A + state->cond.carry;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 1 : 0;
-
-            state->A = result & 0xff;
+            ADC(state, state->A);
             break;
         //BEGIN SUBTRACTION GROUP
         case 0x90:
             //SUB B
-            result = (uint16_t)state->A - (uint16_t)state->B;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 0 : 1;
-
-            state->A = result & 0xff;
+            SUB(state, state->B);
             break;
         case 0x91:
             //SUB C
-            result = (uint16_t)state->A - (uint16_t)state->C;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 0 : 1;
-
-            state->A = result & 0xff;
+            SUB(state, state->C);
             break;
         case 0x92:
             //SUB D
-            result = (uint16_t)state->A - (uint16_t)state->D;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 0 : 1;
-
-            state->A = result & 0xff;
+            SUB(state, state->D);
             break;
         case 0x93:
             //SUB E
-            result = (uint16_t)state->A - (uint16_t)state->E;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 0 : 1;
-
-            state->A = result & 0xff;
+            SUB(state, state->E);
             break;
         case 0x94:
             //SUB H
-            result = (uint16_t)state->A - (uint16_t)state->H;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 0 : 1;
-
-            state->A = result & 0xff;
+            SUB(state, state->H);
             break;
         case 0x95:
             //SUB L
-            result = (uint16_t)state->A - (uint16_t)state->L;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 0 : 1;
-
-            state->A = result & 0xff;
+            SUB(state, state->L);
             break;
         case 0x96:
             //SUB M
             memory_offset = (state->H << 8) + state->L;
-            result = (uint16_t)state->A - (uint16_t)state->memory[memory_offset];
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 0 : 1;
-
-            state->A = result & 0xff;
+            SUB(state, state->memory[memory_offset]);
             break;
         case 0x97:
             //SUB A
-            result = (uint16_t)state->A - (uint16_t)state->A;
-
-            state->cond.zero = (result & 0xff) ? 0 : 1;
-            state->cond.sign = (result & 0x80) ? 1 : 0;
-            state->cond.carry = (result > 0xff) ? 0 : 1;
-
-            state->A = result & 0xff;
+            SUB(state, state->A);
             break;
         default:
             break;
@@ -319,7 +250,7 @@ cpu* init_cpu(void) {
     state->D = 0x00;
     state->E = 0x00;
     state->H = 0x00;
-    state->L = 0x10;
+    state->L = 0x00;
 
     state->SP = 0xeeff;
     state->PC = 0x0000;
@@ -350,11 +281,11 @@ void dump_registers(cpu* state) {
 
     register_array = malloc(sizeof(cpu));
 
-    uint8_t PC_high = state->PC;
-    uint8_t PC_low = state->PC >> 8;
+    uint8_t PC_low = state->PC;
+    uint8_t PC_high = state->PC >> 8;
 
-    uint8_t SP_high = state->SP;
-    uint8_t SP_low = state->SP >> 8;
+    uint8_t SP_low = state->SP;
+    uint8_t SP_high = state->SP >> 8;
 
     uint8_t* register_pointer = &state->A;
 
@@ -372,7 +303,7 @@ void dump_registers(cpu* state) {
     }
 
     for(int i = 7; i < 11; i+=2) {
-        printf("%02x%02x\n", register_array[i+1], register_array[i]);
+        printf("%02x%02x\n", register_array[i], register_array[i+1]);
     }
 }
 
@@ -387,12 +318,6 @@ int check_args(char** argv) {
 }
 
 void handle_args(int argc, char** argv, cpu* state) {
-
-    if(argc < 2) {
-        printf("usage: [romfile]\n");
-    }
-
-    uint8_t* rom_buffer = open_rom(argv[1]);
 
     if(argc >= 2) {
         if(check_args(argv) == 0) {
@@ -423,30 +348,6 @@ void display_intro() {
 	}
 
 	fclose(intro_file);
-}
-
-uint8_t* open_rom(char* fileName) {
-
-	FILE* rom_file = fopen(fileName, "r");
-
-	if(!rom_file) {
-		printf("please point to a valid ROM...\n");
-		exit(0);
-	} 
-
-	//set the file position indicator to the end of the file (measured in bytes)
-	fseek(rom_file, 0, SEEK_END);
-	//get the file position indicator to store the size of the file in bytes
-	file_size = ftell(rom_file);
-	//set the file position indicator to the beginning of the file
-	rewind(rom_file);
-
-	uint8_t* rom_buffer = (uint8_t*) malloc(file_size);
-
-	fread(rom_buffer, file_size, 1, rom_file);
-	fclose(rom_file);
-
-	return rom_buffer;
 }
 
 int main(int argc, char** argv) {

@@ -80,6 +80,22 @@ static void SUB(cpu* state, uint8_t operand) {
     state->A = result & 0xff;
 }
 
+static void SBB(cpu* state, uint8_t operand) {
+    // if you're subbing two 8-bit values, result is never going to be 16-bits
+    uint8_t result = state->A - operand - state->cond.carry;
+
+    state->cond.zero = (result & 0xff) ? 0 : 1;
+    state->cond.sign = (result & 0x80) ? 1 : 0;
+
+    /*  if first value we're subtracting is less than the second value,
+        in a multibyte subtraction this means we'll have to borrow, so we set the borrow flag.
+        We can use SBB to subtract two values and the borrow flag (the carry, but its acting as a borrow)
+    */
+    state->cond.carry = (state->A < operand) ? 1 : 0;
+
+    state->A = result & 0xff;
+}
+
 static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
 }
@@ -129,7 +145,7 @@ void execute(cpu* state) {
             break;
         case 0x46:
             //MOV B, M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->B, state->memory[memory_offset]);
             break;
         case 0x47:
@@ -162,7 +178,7 @@ void execute(cpu* state) {
             break;
         case 0x4E:
             //MOV C, M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->C, state->memory[memory_offset]);
             break;
         case 0x4F:
@@ -195,7 +211,7 @@ void execute(cpu* state) {
             break;
         case 0x56:
             //MOV D, M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->D, state->memory[memory_offset]);
             break;
         case 0x57:
@@ -228,7 +244,7 @@ void execute(cpu* state) {
             break;
         case 0x5E:
             //MOV E, M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->E, state->memory[memory_offset]);
             break;
         case 0x5F:
@@ -261,7 +277,7 @@ void execute(cpu* state) {
             break;
         case 0x66:
             //MOV H, M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->H, state->memory[memory_offset]);
             break;
         case 0x67:
@@ -294,7 +310,7 @@ void execute(cpu* state) {
             break;
         case 0x6E:
             //MOV L, M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->L, state->memory[memory_offset]);
             break;
         case 0x6F:
@@ -303,42 +319,42 @@ void execute(cpu* state) {
             break;
         case 0x70:
             //MOV M, B
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->memory[memory_offset], state->B);
             break;
         case 0x71:
             //MOV M, C
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->memory[memory_offset], state->C);
             break;
         case 0x72:
             //MOV M, D
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->memory[memory_offset], state->D);
             break;
         case 0x73:
             //MOV M, E
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->memory[memory_offset], state->E);
             break;
         case 0x74:
             //MOV M, H
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->memory[memory_offset], state->H);
             break;
         case 0x75:
             //MOV M, L
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->memory[memory_offset], state->L);
             break;
         case 0x76:
             //MOV M, M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->memory[memory_offset], state->memory[memory_offset]);
             break;
         case 0x77:
             //MOV M, A
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->memory[memory_offset], state->A);
             break;
         case 0x78:
@@ -367,7 +383,7 @@ void execute(cpu* state) {
             break;
         case 0x7E:
             //MOV A, M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             MOV(&state->A, state->memory[memory_offset]);
             break;
         case 0x7F:
@@ -400,7 +416,7 @@ void execute(cpu* state) {
             break;
         case 0x86:
             //ADD M (memory address referenced by combo of H and L)
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             ADD(state, state->memory[memory_offset]);
             break;
         case 0x87:
@@ -433,7 +449,7 @@ void execute(cpu* state) {
             break;
         case 0x8E:
             //ADC M (memory address made up of H + L combo)
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             ADC(state, state->memory[memory_offset]);
             break;
         case 0x8F:
@@ -467,12 +483,45 @@ void execute(cpu* state) {
             break;
         case 0x96:
             //SUB M
-            memory_offset = (state->H << 8) + state->L;
+            memory_offset = (state->H << 8) | state->L;
             SUB(state, state->memory[memory_offset]);
             break;
         case 0x97:
             //SUB A
             SUB(state, state->A);
+            break;
+        case 0x98:
+            //SBB B
+            SBB(state, state->B);
+            break;
+        case 0x99:
+            //SBB C
+            SBB(state, state->C);
+            break;
+        case 0x9A:
+            //SBB D
+            SBB(state, state->D);
+            break;
+        case 0x9B:
+            //SBB E
+            SBB(state, state->E);
+            break;
+        case 0x9C:
+            // SBB H
+            SBB(state, state->H);
+            break;
+        case 0x9D:
+            // SBB L
+            SBB(state, state->L);
+            break;
+        case 0x9E:
+            // SBB M
+            memory_offset = (state->H << 8) | state->L;
+            SBB(state, state->memory[memory_offset]);
+            break;
+        case 0x9F:
+            // SBB A
+            SBB(state, state->A);
             break;
         default:
             break;
@@ -605,6 +654,10 @@ void display_intro() {
 }
 
 int main(int argc, char** argv) {
+
+    int8_t x = 255;
+
+    printf("%d\n", x);
 
     display_intro();
 

@@ -71,11 +71,11 @@ static void ADC(cpu* state, uint8_t operand) {
 
 static void SUB(cpu* state, uint8_t operand) {
 
-    uint16_t result = (uint16_t)state->A - (uint16_t)operand;
+    uint8_t result = state->A - operand;
 
     state->cond.zero = (result & 0xff) ? 0 : 1;
     state->cond.sign = (result & 0x80) ? 1 : 0;
-    state->cond.carry = (result > 0xff) ? 0 : 1;
+    state->cond.carry = (state->A < operand) ? 1 : 0;
 
     state->A = result & 0xff;
 }

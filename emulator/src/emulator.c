@@ -96,6 +96,17 @@ static void SBB(cpu* state, uint8_t operand) {
     state->A = result & 0xff;
 }
 
+// Logical AND
+static void ANA(cpu* state, uint8_t operand) {
+    uint8_t result = state->A & operand;
+    
+    state->cond.carry = 0;
+    state->cond.zero = (result & 0xff) ? 0 : 1;
+    state->cond.sign = (result & 0x80) ? 1 : 0;
+
+    state->A = result & 0xff;
+}
+
 static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
 }
@@ -522,6 +533,39 @@ void execute(cpu* state) {
         case 0x9F:
             // SBB A
             SBB(state, state->A);
+            break;
+        case 0xA0:
+            // ANA B
+            ANA(state, state->B);
+            break;
+        case 0xA1:
+            // ANA C
+            ANA(state, state->C);
+            break;
+        case 0xA2:
+            // ANA D
+            ANA(state, state->D);
+            break;
+        case 0xA3:
+            // ANA E
+            ANA(state, state->E);
+            break;
+        case 0xA4:
+            // ANA H
+            ANA(state, state->H);
+            break;
+        case 0xA5:
+            // ANA L
+            ANA(state, state->L);
+            break;
+        case 0xA6:
+            // ANA M
+            memory_offset = (state->H << 8) | state->L;
+            ANA(state, state->memory[memory_offset]);
+            break;
+        case 0xA7:
+            // ANA A
+            ANA(state, state->A);
             break;
         default:
             break;

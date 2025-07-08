@@ -103,6 +103,18 @@ static void ANA(cpu* state, uint8_t operand) {
     state->cond.carry = 0;
     state->cond.zero = (result & 0xff) ? 0 : 1;
     state->cond.sign = (result & 0x80) ? 1 : 0;
+    // need to set parity
+    state->A = result & 0xff;
+}
+
+// Exclusive OR (also known as Zero Accumulator)
+static void XRA(cpu* state, uint8_t operand) {
+    uint8_t result = state->A ^ operand;
+
+    state->cond.carry = 0;
+    state->cond.zero = (result & 0xff) ? 0 : 1;
+    state->cond.sign = (result & 0x80) ? 1 : 0;
+    //need to set party and aux carry
 
     state->A = result & 0xff;
 }
@@ -566,6 +578,39 @@ void execute(cpu* state) {
         case 0xA7:
             // ANA A
             ANA(state, state->A);
+            break;
+        case 0xA8:
+            // XRA B
+            XRA(state, state->B);
+            break;
+        case 0xA9:
+            // XRA C
+            XRA(state, state->C);
+            break;
+        case 0xAA:
+            // XRA D
+            XRA(state, state->D);
+            break;
+        case 0xAB:
+            // XRA E
+            XRA(state, state->E);
+            break;
+        case 0xAC:
+            // XRA H
+            XRA(state, state->H);
+            break;
+        case 0xAD:
+            // XRA L
+            XRA(state, state->L);
+            break;
+        case 0xAE:
+            // XRA M
+            memory_offset = (state->H << 8) | state->L;
+            XRA(state, state->memory[memory_offset]);
+            break;
+        case 0xAF:
+            // XRA A
+            XRA(state, state->A);
             break;
         default:
             break;

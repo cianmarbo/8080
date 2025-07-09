@@ -131,6 +131,11 @@ static void ORA(cpu* state, uint8_t operand) {
     state->A = result & 0xff;
 }
 
+static void CMP(cpu* state, uint8_t operand) {
+    state->cond.zero = ((state->A - operand) & 0xff) ? 0 : 1;
+    // need to implement carry, sign, parity, aux carry
+}
+
 static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
 }
@@ -656,6 +661,39 @@ void execute(cpu* state) {
         case 0xB7:
             // ORA A
             ORA(state, state->A);
+            break;
+        case 0xB8:
+            // CMP B
+            CMP(state, state->B);
+            break;
+        case 0xB9:
+            // CMP C
+            CMP(state, state->C);
+            break;
+        case 0xBA:
+            // CMP D
+            CMP(state, state->D);
+            break;
+        case 0xBB:
+            // CMP E
+            CMP(state, state->E);
+            break;
+        case 0xBC:
+            // CMP H
+            CMP(state, state->H);
+            break;
+        case 0xBD:
+            // CMP L
+            CMP(state, state->L);
+            break;
+        case 0xBE:
+            // CMP M
+            memory_offset = (state->H << 8) | state->L;
+            CMP(state, state->memory[memory_offset]);
+            break;
+        case 0xBF:
+            // CMP A
+            CMP(state, state->A);
             break;
         default:
             break;

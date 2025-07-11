@@ -139,6 +139,12 @@ static void CMP(cpu* state, uint8_t operand) {
     // need to implement parity, aux carry
 }
 
+static void PUSH(cpu* state, uint8_t reg1, uint8_t reg2) {
+    state->SP -= 2;
+    state->memory[state->SP + 1] = reg1;
+    state->memory[state->SP] = reg2;
+}
+
 static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
 }
@@ -524,6 +530,7 @@ void execute(cpu* state) {
             //SUB L
             SUB(state, state->L);
             break;
+        // BEGIN SUBTRACTION WITH BORROW GROUP
         case 0x96:
             //SUB M
             memory_offset = (state->H << 8) | state->L;
@@ -566,6 +573,7 @@ void execute(cpu* state) {
             // SBB A
             SBB(state, state->A);
             break;
+        // BEGIN LOGICAL AND GROUP
         case 0xA0:
             // ANA B
             ANA(state, state->B);
@@ -599,6 +607,7 @@ void execute(cpu* state) {
             // ANA A
             ANA(state, state->A);
             break;
+        // BEGIN LOGICAL XOR GROUP
         case 0xA8:
             // XRA B
             XRA(state, state->B);
@@ -632,6 +641,7 @@ void execute(cpu* state) {
             // XRA A
             XRA(state, state->A);
             break;
+        // BEGIN LOGICAL OR GROUP
         case 0xB0:
             // ORA B
             ORA(state, state->B);
@@ -665,6 +675,7 @@ void execute(cpu* state) {
             // ORA A
             ORA(state, state->A);
             break;
+        // BEGIN COMPARISON GROUP
         case 0xB8:
             // CMP B
             CMP(state, state->B);
@@ -697,6 +708,18 @@ void execute(cpu* state) {
         case 0xBF:
             // CMP A
             CMP(state, state->A);
+            break;
+        case 0xC5:
+            // PUSH B and C ("PUSH B")
+            PUSH(state, state->B, state->C);
+            break;
+        case 0xD5:
+            // PUSH D and E ("PUSH E")
+            PUSH(state, state->D, state->E);
+            break;
+        case 0xE5:
+            // PUSH H and L ("PUSH H")
+            PUSH(state, state->H, state->L);
             break;
         default:
             break;

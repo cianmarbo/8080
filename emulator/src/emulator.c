@@ -203,6 +203,7 @@ void execute(cpu* state) {
     
     uint8_t* instruction = &state->memory[state->PC];
     uint16_t memory_offset;
+    state->PC++; //increment the Program Counter after every instruction
 
     disassemble_instruction(instruction);
 
@@ -756,35 +757,35 @@ void execute(cpu* state) {
             break;
         case 0xC1:
             // POP B and C ("POP B")
-            POP(state, &state->B, state->C, NULL);
+            POP(state, &state->B, &state->C, 0);
             break;
         case 0xD1:
             // POP D and E ("POP D") 
-            POP(state, &state->D, state->E, NULL);
+            POP(state, &state->D, &state->E, 0);
             break;
         case 0xE1:
             // POP H and L ("POP H") 
-            POP(state, &state->H, state->L, NULL);
+            POP(state, &state->H, &state->L, 0);
             break;
         case 0xF1:
             // POP A and PSW ("POP PSW")
-            POP(state, &state->A, NULL, PSW_FLAG);
+            POP(state, &state->A, 0, PSW_FLAG);
             break;
         case 0xC5:
             // PUSH B and C ("PUSH B")
-            PUSH(state, state->B, state->C, NULL);
+            PUSH(state, state->B, state->C, 0);
             break;
         case 0xD5:
             // PUSH D and E ("PUSH E")
-            PUSH(state, state->D, state->E, NULL);
+            PUSH(state, state->D, state->E, 0);
             break;
         case 0xE5:
             // PUSH H and L ("PUSH H")
-            PUSH(state, state->H, state->L, NULL);
+            PUSH(state, state->H, state->L, 0);
             break;
         case 0xF5:
             // PUSH A and PSW ("PUSH PSW")
-            PUSH(state, state->A, NULL, PSW_FLAG);
+            PUSH(state, state->A, 0, PSW_FLAG);
             break;
         default:
             break;
@@ -819,13 +820,22 @@ cpu* init_cpu(void) {
 }
 
 void test(cpu* state) {
-    state->A = 0xff;
+    // state->A = 0xff;
+    state->B = 0x4;
     state->C = 0x3;
-    state->D = 0xf4;
+    // state->D = 0xf4;
+    state->SP = 0x7FFF;
 
-    state->memory[0x0000] = 0x42;
+    state->memory[0x0000] = 0xc5; // push b and c
+    state->memory[0x0001] = 0xe1; // pop into h and l
 
-    execute(state);
+
+    // execute(state);
+
+    // we update PC directly everytime we call execute()
+    while(state->PC < 10) {
+        execute(state);
+    }
 }
 
 // Output register contents to stdout
@@ -917,10 +927,6 @@ void display_intro() {
 }
 
 int main(int argc, char** argv) {
-
-    int8_t x = 255;
-
-    printf("%d\n", x);
 
     display_intro();
 

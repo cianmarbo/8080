@@ -11,6 +11,8 @@ const char* build_date = __DATE__;
 #define MAX_INTRO_LINES 14
 #define MAX_INTRO_CHARS 50
 
+#define PUSH_PSW        1
+
 uint8_t* register_array = NULL;
 
 // Condition bits
@@ -139,8 +141,23 @@ static void CMP(cpu* state, uint8_t operand) {
     // need to implement parity, aux carry
 }
 
-static void PUSH(cpu* state, uint8_t reg1, uint8_t reg2) {
+static void PUSH(cpu* state, uint8_t reg1, uint8_t reg2, uint8_t push_psw) {
+    //technically the stack is decremented after the operation but makes no difference here really
     state->SP -= 2;
+    
+    if (push_psw) {
+        uint8_t PSW = 
+            (state->cond.sign << 7) |
+            (state->cond.zero << 6) |
+            (state->cond.aux_carry << 4) |
+            (state->cond.parity << 2) |
+            (1 << 1) |
+            state->cond.carry;
+        
+        state->memory[state->SP + 1] = reg1;
+        state->memory[state->SP] =  PSW;
+    }
+
     state->memory[state->SP + 1] = reg1;
     state->memory[state->SP] = reg2;
 }
@@ -711,15 +728,19 @@ void execute(cpu* state) {
             break;
         case 0xC5:
             // PUSH B and C ("PUSH B")
-            PUSH(state, state->B, state->C);
+            PUSH(state, state->B, state->C, NULL);
             break;
         case 0xD5:
             // PUSH D and E ("PUSH E")
-            PUSH(state, state->D, state->E);
+            PUSH(state, state->D, state->E, NULL);
             break;
         case 0xE5:
             // PUSH H and L ("PUSH H")
-            PUSH(state, state->H, state->L);
+            PUSH(state, state->H, state->L, NULL);
+            break;
+        case 0xF5:
+            // PUSH A and PSW ("PUSH PSW")
+            PUSH(state, state->A, NULL, PUSH_PSW);
             break;
         default:
             break;

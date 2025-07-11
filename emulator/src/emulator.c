@@ -133,7 +133,10 @@ static void ORA(cpu* state, uint8_t operand) {
 
 static void CMP(cpu* state, uint8_t operand) {
     state->cond.zero = ((state->A - operand) & 0xff) ? 0 : 1;
-    // need to implement carry, sign, parity, aux carry
+    state->cond.carry = (state->A < operand) ? 1 : 0; // we use the carry as a borrow
+    state->cond.sign = ((state->A - operand) & 0x80) ? 1 : 0;
+
+    // need to implement parity, aux carry
 }
 
 static void MOV(uint8_t* op, uint8_t operand) {

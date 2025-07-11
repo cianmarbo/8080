@@ -11,7 +11,7 @@ const char* build_date = __DATE__;
 #define MAX_INTRO_LINES 14
 #define MAX_INTRO_CHARS 50
 
-#define PUSH_PSW        1
+#define PSW_FLAG        1
 
 uint8_t* register_array = NULL;
 
@@ -145,6 +145,7 @@ static void PUSH(cpu* state, uint8_t reg1, uint8_t reg2, uint8_t push_psw) {
     //technically the stack is decremented after the operation but makes no difference here really
     state->SP -= 2;
     
+    // create a PSW register from the conditions struct so we can perform a push
     if (push_psw) {
         uint8_t PSW = 
             (state->cond.sign << 7) |
@@ -154,12 +155,39 @@ static void PUSH(cpu* state, uint8_t reg1, uint8_t reg2, uint8_t push_psw) {
             (1 << 1) |
             state->cond.carry;
         
-        state->memory[state->SP + 1] = reg1;
         state->memory[state->SP] =  PSW;
+    } else {
+        state->memory[state->SP] = reg2;
     }
 
     state->memory[state->SP + 1] = reg1;
-    state->memory[state->SP] = reg2;
+}
+
+static void POP(cpu* state, uint8_t* reg1, uint8_t* reg2, uint8_t pop_psw) {
+    /*
+
+    The layout of the Program Status Word register (PSW) is as follows:
+
+      7   6   5   4    3   2   1   0
+    | S | Z | 0 | AC | 0 | P | 1 | C |
+    
+    The CPU flags are restored if PSW is specified
+    Whatever byte is at the address SP is pointing too is popped into PSW (so here we just the set the conditions struct)
+    */
+
+    if (pop_psw) {
+        state->cond.sign = ((state->memory[state->SP] & 0x80) >> 7);
+        state->cond.zero = ((state->memory[state->SP] & 0x40) >> 6);
+        state->cond.aux_carry = ((state->memory[state->SP] & 0x10) >> 4);
+        state->cond.parity = ((state->memory[state->SP] & 0x4) >> 2);
+        state->cond.carry = state->memory[state->SP];
+    } else {
+        *reg2 = state->memory[state->SP];
+    }
+
+    *reg1 = state->memory[state->SP+1];
+
+    state->SP+=2;
 }
 
 static void MOV(uint8_t* op, uint8_t operand) {
@@ -726,6 +754,22 @@ void execute(cpu* state) {
             // CMP A
             CMP(state, state->A);
             break;
+        case 0xC1:
+            // POP B and C ("POP B")
+            POP(state, &state->B, state->C, NULL);
+            break;
+        case 0xD1:
+            // POP D and E ("POP D") 
+            POP(state, &state->D, state->E, NULL);
+            break;
+        case 0xE1:
+            // POP H and L ("POP H") 
+            POP(state, &state->H, state->L, NULL);
+            break;
+        case 0xF1:
+            // POP A and PSW ("POP PSW")
+            POP(state, &state->A, NULL, PSW_FLAG);
+            break;
         case 0xC5:
             // PUSH B and C ("PUSH B")
             PUSH(state, state->B, state->C, NULL);
@@ -740,7 +784,7 @@ void execute(cpu* state) {
             break;
         case 0xF5:
             // PUSH A and PSW ("PUSH PSW")
-            PUSH(state, state->A, NULL, PUSH_PSW);
+            PUSH(state, state->A, NULL, PSW_FLAG);
             break;
         default:
             break;

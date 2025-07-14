@@ -176,10 +176,10 @@ static void POP(cpu* state, uint8_t* reg1, uint8_t* reg2, uint8_t pop_psw) {
     */
 
     if (pop_psw) {
-        state->cond.sign = ((state->memory[state->SP] & 0x80) >> 7);
-        state->cond.zero = ((state->memory[state->SP] & 0x40) >> 6);
-        state->cond.aux_carry = ((state->memory[state->SP] & 0x10) >> 4);
-        state->cond.parity = ((state->memory[state->SP] & 0x4) >> 2);
+        state->cond.sign = ((state->memory[state->SP]) >> 7);
+        state->cond.zero = ((state->memory[state->SP]) >> 6);
+        state->cond.aux_carry = ((state->memory[state->SP]) >> 4);
+        state->cond.parity = ((state->memory[state->SP]) >> 2);
         state->cond.carry = state->memory[state->SP];
     } else {
         *reg2 = state->memory[state->SP];

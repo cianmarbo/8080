@@ -334,7 +334,68 @@ static void CPO(cpu* state, uint8_t high, uint8_t low) {
     state->PC = state->cond.parity == 1 ? state->PC : ((high << 8) | low);
 }
 
+// RET - Return from subroutine
+static void RET(cpu* state) {
+    state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
+    state->SP += 2;
+}
 
+// RC - Return if Carry
+static void RC(cpu* state) {
+    if (state->cond.carry == 1)
+        state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
+        state->SP += 2;
+}
+
+// RNC - Return if no Carry
+static void RNC(cpu* state) {
+    if (state->cond.carry == 0)
+        state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
+        state->SP += 2;
+}
+
+// RZ - Return if Zero
+static void RZ(cpu* state) {
+    if (state->cond.zero == 1)
+        state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
+        state->SP += 2;
+}
+
+// RNZ - Return if not zero
+static void RNZ(cpu* state) {
+    if (state->cond.zero == 0)
+        state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
+        state->SP += 2;
+}
+
+// RM - Return if minus
+static void RM(cpu* state) {
+    if (state->cond.sign == 1)
+        state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
+        state->SP += 2;
+}
+
+// RP - Return if minus
+static void RP(cpu* state) {
+    if (state->cond.sign == 0)
+        state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
+        state->SP += 2;
+}
+
+// RPE - Return if Parity even
+static void RPE(cpu* state) {
+    if (state->cond.parity == 1)
+        state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
+        state->SP += 2;
+}
+
+// RPO - Return if Parity odd
+static void RPO(cpu* state) {
+    if (state->cond.parity == 0) {
+        state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
+        state->SP += 2;
+    }
+}
 
 
 static void MOV(uint8_t* op, uint8_t operand) {

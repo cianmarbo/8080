@@ -190,6 +190,46 @@ static void POP(cpu* state, uint8_t* reg1, uint8_t* reg2, uint8_t pop_psw) {
     state->SP+=2;
 }
 
+// PCHL - "Load Program Counter" - Directly load PC with contents of H and L
+static void PCHL(cpu* state) {
+    state->PC = state->H << 8 | state->L;
+}
+
+// JMP - Direct Addressing Instruction, address is part of instruction (two bytes after opcode)
+static void JMP(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = (high << 8) | low;
+}
+
+// JC - Jump if Carry is set
+static void JC(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = state->cond.carry == 0 ? state->PC : ((high << 8) | low);
+}
+
+// JNC - Jump if Carrt is Not set
+static void JNC(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = state->cond.carry == 1 ? state->PC : ((high << 8) | low);
+}
+
+// JZ - Jump if Zero
+static void JZ(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = state->cond.zero == 0 ? state->PC : ((high << 8) | low);
+}
+
+// JNZ - Jump if Not Zero
+static void JNZ(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = state->cond.zero == 1 ? state->PC : ((high << 8) | low);
+}
+
+// JM - Jump if result was negative
+static void JM(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = state->cond.sign == 0 ? state->PC : ((high << 8) | low);
+}
+
+// JP - Jump if result was positive
+static void JP(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = state->cond.sign == 1 ? state->PC : ((high << 8) | low);
+}
+
 static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
 }

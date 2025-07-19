@@ -48,6 +48,13 @@ struct cpu {
 
 typedef struct cpu cpu;
 
+uint8_t calculate_parity(uint8_t value) {
+    value ^= value >> 4;
+    value ^= value >> 2; 
+    value ^= value >> 1;
+    return (value & 1) ^ 1;
+}
+
 static void ADD(cpu* state, uint8_t operand) {
 
     uint16_t result = (uint16_t)state->A + (uint16_t)operand;
@@ -55,6 +62,7 @@ static void ADD(cpu* state, uint8_t operand) {
     state->cond.zero = (result & 0xff) ? 0 : 1;
     state->cond.sign = (result & 0x80) ? 1 : 0;
     state->cond.carry = (result > 0xff) ? 1 : 0;
+    state->cond.parity = calculate_parity(result);
 
     // assign result by doing bitwise AND on 0xff (255 base 10) to prevent overflow
     state->A = result & 0xff;
@@ -67,6 +75,7 @@ static void ADC(cpu* state, uint8_t operand) {
     state->cond.zero = (result & 0xff) ? 0 : 1;
     state->cond.sign = (result & 0x80) ? 1 : 0;
     state->cond.carry = (result > 0xff) ? 1 : 0;
+    state->cond.parity = calculate_parity(result);
 
     state->A = result & 0xff;
 }
@@ -78,6 +87,7 @@ static void SUB(cpu* state, uint8_t operand) {
     state->cond.zero = (result & 0xff) ? 0 : 1;
     state->cond.sign = (result & 0x80) ? 1 : 0;
     state->cond.carry = (state->A < operand) ? 1 : 0;
+    state->cond.parity = calculate_parity(result);
 
     state->A = result & 0xff;
 }
@@ -94,6 +104,7 @@ static void SBB(cpu* state, uint8_t operand) {
         We can use SBB to subtract two values and the borrow flag (the carry, but its acting as a borrow)
     */
     state->cond.carry = (state->A < operand) ? 1 : 0;
+    state->cond.parity = calculate_parity(result);
 
     state->A = result & 0xff;
 }
@@ -105,7 +116,8 @@ static void ANA(cpu* state, uint8_t operand) {
     state->cond.carry = 0;
     state->cond.zero = (result & 0xff) ? 0 : 1;
     state->cond.sign = (result & 0x80) ? 1 : 0;
-    // need to set parity
+    state->cond.parity = calculate_parity(result);
+
     state->A = result & 0xff;
 }
 
@@ -116,7 +128,7 @@ static void XRA(cpu* state, uint8_t operand) {
     state->cond.carry = 0;
     state->cond.zero = (result & 0xff) ? 0 : 1;
     state->cond.sign = (result & 0x80) ? 1 : 0;
-    //need to set parity and aux carry
+    state->cond.parity = calculate_parity(result);
 
     state->A = result & 0xff;
 }
@@ -128,7 +140,7 @@ static void ORA(cpu* state, uint8_t operand) {
     state->cond.carry = 0;
     state->cond.zero = (result & 0xff) ? 0 : 1;
     state->cond.sign = (result & 0x80) ? 1 : 0;
-    //need to set parity
+    state->cond.parity = calculate_parity(result);
 
     state->A = result & 0xff;
 }
@@ -137,8 +149,7 @@ static void CMP(cpu* state, uint8_t operand) {
     state->cond.zero = ((state->A - operand) & 0xff) ? 0 : 1;
     state->cond.carry = (state->A < operand) ? 1 : 0; // we use the carry as a borrow
     state->cond.sign = ((state->A - operand) & 0x80) ? 1 : 0;
-
-    // need to implement parity, aux carry
+    state->cond.parity = calculate_parity((state->A - operand));
 }
 
 static void PUSH(cpu* state, uint8_t reg1, uint8_t reg2, uint8_t push_psw) {
@@ -229,6 +240,102 @@ static void JM(cpu* state, uint8_t high, uint8_t low) {
 static void JP(cpu* state, uint8_t high, uint8_t low) {
     state->PC = state->cond.sign == 1 ? state->PC : ((high << 8) | low);
 }
+
+// JPE - Jump if parity is even
+static void JPE(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = state->cond.parity == 0 ? state->PC : ((high << 8) | low);
+}
+
+// JPO - Jump if parity is not even
+static void JPO(cpu* state, uint8_t high, uint8_t low) {
+    state->PC = state->cond.parity == 1 ? state->PC : ((high << 8) | low);
+}
+
+// CALL - Just a JMP but we save the return address
+static void CALL(cpu* state, uint8_t high, uint8_t low) {
+    
+    // save return address
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = ((high << 8) | low);
+}
+
+// CC - Call if Carry
+static void CC(cpu* state, uint8_t high, uint8_t low) {
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = state->cond.carry == 0 ? state->PC : ((high << 8) | low);
+}
+
+// CNC - Call if No Carry
+static void CNC(cpu* state, uint8_t high, uint8_t low) {
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = state->cond.carry == 1 ? state->PC : ((high << 8) | low);
+}
+
+// CZ - Call if Zero
+static void CZ(cpu* state, uint8_t high, uint8_t low) {
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = state->cond.zero == 0 ? state->PC : ((high << 8) | low);
+}
+
+// CNZ - Call if not zero
+static void CNZ(cpu* state, uint8_t high, uint8_t low) {
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = state->cond.zero == 1 ? state->PC : ((high << 8) | low);
+}
+
+// CM - Call if minus
+static void CM(cpu* state, uint8_t high, uint8_t low) {
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = state->cond.sign == 0 ? state->PC : ((high << 8) | low);
+}
+
+// CP - Call if plus
+static void CP(cpu* state, uint8_t high, uint8_t low) {
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = state->cond.sign == 1 ? state->PC : ((high << 8) | low);
+}
+
+// CPE - Call if Parity Even
+static void CPE(cpu* state, uint8_t high, uint8_t low) {
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = state->cond.parity == 0 ? state->PC : ((high << 8) | low);
+}
+
+// CPO - Call if Parity Odd
+static void CPO(cpu* state, uint8_t high, uint8_t low) {
+    state->SP -= 2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = state->cond.parity == 1 ? state->PC : ((high << 8) | low);
+}
+
+
+
 
 static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;

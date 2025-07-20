@@ -264,74 +264,74 @@ static void CALL(cpu* state, uint8_t high, uint8_t low) {
 
 // CC - Call if Carry
 static void CC(cpu* state, uint8_t high, uint8_t low) {
-    state->SP -= 2;
-    state->memory[state->SP] = state->PC;
-    state->memory[state->SP + 1] = state->PC >> 8;
-
-    state->PC = state->cond.carry == 0 ? state->PC : ((high << 8) | low);
+    if (state->cond.carry == 1)
+        state->SP -= 2;
+        state->memory[state->SP] = state->PC;
+        state->memory[state->SP + 1] = state->PC >> 8;
+        state->PC = ((high << 8) | low);
 }
 
 // CNC - Call if No Carry
 static void CNC(cpu* state, uint8_t high, uint8_t low) {
-    state->SP -= 2;
-    state->memory[state->SP] = state->PC;
-    state->memory[state->SP + 1] = state->PC >> 8;
-
-    state->PC = state->cond.carry == 1 ? state->PC : ((high << 8) | low);
+    if (state->cond.carry == 0)
+        state->SP -= 2;
+        state->memory[state->SP] = state->PC;
+        state->memory[state->SP + 1] = state->PC >> 8;
+        state->PC = ((high << 8) | low);
 }
 
 // CZ - Call if Zero
 static void CZ(cpu* state, uint8_t high, uint8_t low) {
-    state->SP -= 2;
-    state->memory[state->SP] = state->PC;
-    state->memory[state->SP + 1] = state->PC >> 8;
-
-    state->PC = state->cond.zero == 0 ? state->PC : ((high << 8) | low);
+    if (state->cond.zero == 1)
+        state->SP -= 2;
+        state->memory[state->SP] = state->PC;
+        state->memory[state->SP + 1] = state->PC >> 8;
+        state->PC = ((high << 8) | low);
 }
 
 // CNZ - Call if not zero
 static void CNZ(cpu* state, uint8_t high, uint8_t low) {
-    state->SP -= 2;
-    state->memory[state->SP] = state->PC;
-    state->memory[state->SP + 1] = state->PC >> 8;
-
-    state->PC = state->cond.zero == 1 ? state->PC : ((high << 8) | low);
+    if (state->cond.zero == 0)
+        state->SP -= 2;
+        state->memory[state->SP] = state->PC;
+        state->memory[state->SP + 1] = state->PC >> 8;
+        state->PC = ((high << 8) | low);
 }
 
 // CM - Call if minus
 static void CM(cpu* state, uint8_t high, uint8_t low) {
-    state->SP -= 2;
-    state->memory[state->SP] = state->PC;
-    state->memory[state->SP + 1] = state->PC >> 8;
-
-    state->PC = state->cond.sign == 0 ? state->PC : ((high << 8) | low);
+    if (state->cond.sign == 1)
+        state->SP -= 2;
+        state->memory[state->SP] = state->PC;
+        state->memory[state->SP + 1] = state->PC >> 8;
+        state->PC = ((high << 8) | low);
 }
 
 // CP - Call if plus
 static void CP(cpu* state, uint8_t high, uint8_t low) {
-    state->SP -= 2;
-    state->memory[state->SP] = state->PC;
-    state->memory[state->SP + 1] = state->PC >> 8;
-
-    state->PC = state->cond.sign == 1 ? state->PC : ((high << 8) | low);
+    if (state->cond.sign == 0)
+        state->SP -= 2;
+        state->memory[state->SP] = state->PC;
+        state->memory[state->SP + 1] = state->PC >> 8;
+        state->PC = ((high << 8) | low);
 }
 
 // CPE - Call if Parity Even
 static void CPE(cpu* state, uint8_t high, uint8_t low) {
-    state->SP -= 2;
-    state->memory[state->SP] = state->PC;
-    state->memory[state->SP + 1] = state->PC >> 8;
-
-    state->PC = state->cond.parity == 0 ? state->PC : ((high << 8) | low);
+    if (state->cond.parity == 1)
+        state->SP -= 2;
+        state->memory[state->SP] = state->PC;
+        state->memory[state->SP + 1] = state->PC >> 8;
+        state->PC = ((high << 8) | low);
 }
 
 // CPO - Call if Parity Odd
 static void CPO(cpu* state, uint8_t high, uint8_t low) {
-    state->SP -= 2;
-    state->memory[state->SP] = state->PC;
-    state->memory[state->SP + 1] = state->PC >> 8;
-
-    state->PC = state->cond.parity == 1 ? state->PC : ((high << 8) | low);
+    if (state->cond.parity == 0)
+        state->SP -= 2;
+        state->memory[state->SP] = state->PC;
+        state->memory[state->SP + 1] = state->PC >> 8;
+        state->PC = ((high << 8) | low);
 }
 
 // RET - Return from subroutine
@@ -375,7 +375,7 @@ static void RM(cpu* state) {
         state->SP += 2;
 }
 
-// RP - Return if minus
+// RP - Return if plus
 static void RP(cpu* state) {
     if (state->cond.sign == 0)
         state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];

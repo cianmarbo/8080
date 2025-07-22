@@ -27,6 +27,10 @@ struct flags {
 
 typedef struct flags flags;
 
+typedef struct {
+    uint8_t INTE        : 1;    // INTE is name of 8080's "Interrupt Enable" bit
+} interrupt;
+
 struct cpu {
     // Registers
     uint8_t A;
@@ -41,6 +45,8 @@ struct cpu {
 
     // Memory
     uint8_t* memory;
+
+    interrupt interrupt_flag;
 
     // Condition bits
     flags cond;
@@ -264,74 +270,82 @@ static void CALL(cpu* state, uint8_t high, uint8_t low) {
 
 // CC - Call if Carry
 static void CC(cpu* state, uint8_t high, uint8_t low) {
-    if (state->cond.carry == 1)
+    if (state->cond.carry == 1) {
         state->SP -= 2;
         state->memory[state->SP] = state->PC;
         state->memory[state->SP + 1] = state->PC >> 8;
         state->PC = ((high << 8) | low);
+    }
 }
 
 // CNC - Call if No Carry
 static void CNC(cpu* state, uint8_t high, uint8_t low) {
-    if (state->cond.carry == 0)
+    if (state->cond.carry == 0) {
         state->SP -= 2;
         state->memory[state->SP] = state->PC;
         state->memory[state->SP + 1] = state->PC >> 8;
         state->PC = ((high << 8) | low);
+    }
 }
 
 // CZ - Call if Zero
 static void CZ(cpu* state, uint8_t high, uint8_t low) {
-    if (state->cond.zero == 1)
+    if (state->cond.zero == 1) {
         state->SP -= 2;
         state->memory[state->SP] = state->PC;
         state->memory[state->SP + 1] = state->PC >> 8;
         state->PC = ((high << 8) | low);
+    }
 }
 
 // CNZ - Call if not zero
 static void CNZ(cpu* state, uint8_t high, uint8_t low) {
-    if (state->cond.zero == 0)
+    if (state->cond.zero == 0) {
         state->SP -= 2;
         state->memory[state->SP] = state->PC;
         state->memory[state->SP + 1] = state->PC >> 8;
         state->PC = ((high << 8) | low);
+    }
 }
 
 // CM - Call if minus
 static void CM(cpu* state, uint8_t high, uint8_t low) {
-    if (state->cond.sign == 1)
+    if (state->cond.sign == 1) {
         state->SP -= 2;
         state->memory[state->SP] = state->PC;
         state->memory[state->SP + 1] = state->PC >> 8;
         state->PC = ((high << 8) | low);
+    }
 }
 
 // CP - Call if plus
 static void CP(cpu* state, uint8_t high, uint8_t low) {
-    if (state->cond.sign == 0)
+    if (state->cond.sign == 0) {
         state->SP -= 2;
         state->memory[state->SP] = state->PC;
         state->memory[state->SP + 1] = state->PC >> 8;
         state->PC = ((high << 8) | low);
+    }
 }
 
 // CPE - Call if Parity Even
 static void CPE(cpu* state, uint8_t high, uint8_t low) {
-    if (state->cond.parity == 1)
+    if (state->cond.parity == 1) {
         state->SP -= 2;
         state->memory[state->SP] = state->PC;
         state->memory[state->SP + 1] = state->PC >> 8;
         state->PC = ((high << 8) | low);
+    }
 }
 
 // CPO - Call if Parity Odd
 static void CPO(cpu* state, uint8_t high, uint8_t low) {
-    if (state->cond.parity == 0)
+    if (state->cond.parity == 0) {
         state->SP -= 2;
         state->memory[state->SP] = state->PC;
         state->memory[state->SP + 1] = state->PC >> 8;
         state->PC = ((high << 8) | low);
+    }
 }
 
 // RET - Return from subroutine
@@ -342,51 +356,58 @@ static void RET(cpu* state) {
 
 // RC - Return if Carry
 static void RC(cpu* state) {
-    if (state->cond.carry == 1)
+    if (state->cond.carry == 1) {
         state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
         state->SP += 2;
+    }
 }
 
 // RNC - Return if no Carry
 static void RNC(cpu* state) {
-    if (state->cond.carry == 0)
+    if (state->cond.carry == 0) {
         state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
         state->SP += 2;
+    }
 }
 
 // RZ - Return if Zero
 static void RZ(cpu* state) {
-    if (state->cond.zero == 1)
+    if (state->cond.zero == 1) {
         state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
         state->SP += 2;
+    }
 }
 
 // RNZ - Return if not zero
 static void RNZ(cpu* state) {
-    if (state->cond.zero == 0)
+    if (state->cond.zero == 0) {
         state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
         state->SP += 2;
+    }
 }
 
 // RM - Return if minus
 static void RM(cpu* state) {
-    if (state->cond.sign == 1)
+    if (state->cond.sign == 1) {
         state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
         state->SP += 2;
+    }
 }
 
 // RP - Return if plus
 static void RP(cpu* state) {
-    if (state->cond.sign == 0)
+    if (state->cond.sign == 0) {
         state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
         state->SP += 2;
+    }
 }
 
 // RPE - Return if Parity even
 static void RPE(cpu* state) {
-    if (state->cond.parity == 1)
+    if (state->cond.parity == 1) {
         state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
         state->SP += 2;
+    }
 }
 
 // RPO - Return if Parity odd
@@ -397,6 +418,24 @@ static void RPO(cpu* state) {
     }
 }
 
+// RST - Restart instruction 
+static void RST(cpu* state, uint8_t offset) {
+
+    // Push return address onto the stack
+    state->SP-=2;
+    state->memory[state->SP] = state->PC;
+    state->memory[state->SP + 1] = state->PC >> 8;
+
+    state->PC = offset;
+}
+
+static void DI(cpu* state) {
+    state->interrupt_flag.INTE = 0;
+}
+
+static void EI(cpu* state) {
+    state->interrupt_flag.INTE = 1;
+}
 
 static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
@@ -417,9 +456,9 @@ void execute(cpu* state) {
 
     switch(*instruction) {
         case 0x00:
-            // state->PC += 2;
-            break;
-        case 0x01:
+        case 0x10:
+        case 0x20:
+        case 0x30:
             break;
         //BEGIN MOV GROUP
         case 0x40:
@@ -963,9 +1002,109 @@ void execute(cpu* state) {
             // CMP A
             CMP(state, state->A);
             break;
+        case 0xC0:
+            RNZ(state);
+            break;
         case 0xC1:
             // POP B and C ("POP B")
             POP(state, &state->B, &state->C, 0);
+            break;
+        case 0xC2:
+            JNZ(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xC3:
+            JMP(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xC7:
+            // RST 0
+            RST(state, 0x0000);
+            break;
+        case 0xC8:
+            RZ(state);
+            break;
+        case 0xC9:
+            RET(state);
+            break;
+        case 0xCA:
+            JZ(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xCB:
+            // Additional opcode for JMP
+            JMP(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xCF:
+            RST(state, 0x0008);
+            break;
+        case 0xD0:
+            RNC(state);
+            break;
+        case 0xD2:
+            JNC(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xD7:
+            RST(state, 0x0010);
+            break;
+        case 0xD8:
+            RC(state);
+            break;
+        case 0xD9:
+            // Additional opcode for RET
+            RET(state);
+            break;
+        case 0xDA:
+            JC(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xDF:
+            RST(state, 0x0018);
+            break;
+        case 0xE0:
+            RPO(state);
+            break;
+        case 0xE2:
+            JPO(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xE7:
+            RST(state, 0x0020);
+            break;
+        case 0xE8:
+            RPE(state);
+            break;
+        case 0xE9:
+            PCHL(state);
+            break;
+        case 0xEA:
+            JPE(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xEF:
+            RST(state, 0x0028);
+            break;
+        case 0xF0:
+            RP(state);
+            break;
+        case 0xF2:
+            JP(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xF7:
+            RST(state, 0x0030);
+            break;
+        case 0xF8:
+            RM(state);
+            break;
+        case 0xFA:
+            JM(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xFF:
+            RST(state, 0x0038);
             break;
         case 0xD1:
             // POP D and E ("POP D") 
@@ -991,6 +1130,13 @@ void execute(cpu* state) {
             // PUSH H and L ("PUSH H")
             PUSH(state, state->H, state->L, 0);
             break;
+        case 0xF3:
+            // DI - Disable Interrupts
+            DI(state);
+            break;
+        case 0xFB:
+            // EI - Enable Interrupts
+            EI(state);
         case 0xF5:
             // PUSH A and PSW ("PUSH PSW")
             PUSH(state, state->A, 0, PSW_FLAG);

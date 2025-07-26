@@ -1017,6 +1017,9 @@ void execute(cpu* state) {
             JMP(state, state->memory[state->PC+1], state->memory[state->PC]);
             state->PC += 2;
             break;
+        case 0xC4:
+            CNZ(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
         case 0xC7:
             // RST 0
             RST(state, 0x0000);
@@ -1036,6 +1039,14 @@ void execute(cpu* state) {
             JMP(state, state->memory[state->PC+1], state->memory[state->PC]);
             state->PC += 2;
             break;
+        case 0xCC:
+            CZ(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xCD:
+            CALL(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
         case 0xCF:
             RST(state, 0x0008);
             break;
@@ -1044,6 +1055,10 @@ void execute(cpu* state) {
             break;
         case 0xD2:
             JNC(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xD4:
+            CNC(state, state->memory[state->PC+1], state->memory[state->PC]);
             state->PC += 2;
             break;
         case 0xD7:
@@ -1060,6 +1075,15 @@ void execute(cpu* state) {
             JC(state, state->memory[state->PC+1], state->memory[state->PC]);
             state->PC += 2;
             break;
+        case 0xDC:
+            CC(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xDD:
+            // Additional opcode for CALL
+            CALL(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
         case 0xDF:
             RST(state, 0x0018);
             break;
@@ -1068,6 +1092,10 @@ void execute(cpu* state) {
             break;
         case 0xE2:
             JPO(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xE4:
+            CPO(state, state->memory[state->PC+1], state->memory[state->PC]);
             state->PC += 2;
             break;
         case 0xE7:
@@ -1081,6 +1109,15 @@ void execute(cpu* state) {
             break;
         case 0xEA:
             JPE(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xEC:
+            CPE(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xED:
+            // Additional opcode for CALL
+            CALL(state, state->memory[state->PC+1], state->memory[state->PC]);
             state->PC += 2;
             break;
         case 0xEF:
@@ -1101,6 +1138,14 @@ void execute(cpu* state) {
             break;
         case 0xFA:
             JM(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xFC:
+            CM(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
+            break;
+        case 0xFD:
+            CALL(state, state->memory[state->PC+1], state->memory[state->PC]);
             state->PC += 2;
             break;
         case 0xFF:
@@ -1133,6 +1178,10 @@ void execute(cpu* state) {
         case 0xF3:
             // DI - Disable Interrupts
             DI(state);
+            break;
+        case 0xF4:
+            CP(state, state->memory[state->PC+1], state->memory[state->PC]);
+            state->PC += 2;
             break;
         case 0xFB:
             // EI - Enable Interrupts

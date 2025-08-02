@@ -207,6 +207,8 @@ static void POP(cpu* state, uint8_t* reg1, uint8_t* reg2, uint8_t pop_psw) {
     state->SP+=2;
 }
 
+
+
 // PCHL - "Load Program Counter" - Directly load PC with contents of H and L
 static void PCHL(cpu* state) {
     state->PC = state->H << 8 | state->L;
@@ -222,7 +224,7 @@ static void JC(cpu* state, uint8_t high, uint8_t low) {
     state->PC = state->cond.carry == 0 ? state->PC : ((high << 8) | low);
 }
 
-// JNC - Jump if Carrt is Not set
+// JNC - Jump if Carrys is Not set
 static void JNC(cpu* state, uint8_t high, uint8_t low) {
     state->PC = state->cond.carry == 1 ? state->PC : ((high << 8) | low);
 }
@@ -257,7 +259,7 @@ static void JPO(cpu* state, uint8_t high, uint8_t low) {
     state->PC = state->cond.parity == 1 ? state->PC : ((high << 8) | low);
 }
 
-// CALL - Just a JMP but we save the return address
+// CALL - Just a JMP, but we save the return address
 static void CALL(cpu* state, uint8_t high, uint8_t low) {
     
     // save return address
@@ -441,6 +443,15 @@ static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
 }
 
+static void MVI(uint8_t* reg, uint8_t data) {
+    *(reg) = data;
+}
+
+static void MVI_M(cpu* state, uint8_t data) {
+    uint16_t addr = (state->H << 8) | state->L;
+    state->memory[addr] = data;
+}
+
 void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
     printf("------------------------------\n");
@@ -459,6 +470,38 @@ void execute(cpu* state) {
         case 0x10:
         case 0x20:
         case 0x30:
+            break;
+        case 0x06:
+            MVI(&state->B, *(instruction+1));
+            state->PC += 1;
+            break;
+        case 0x0E:
+            MVI(&state->C, *(instruction+1));
+            state->PC += 1;
+            break;
+        case 0x16:
+            MVI(&state->D, *(instruction+1));
+            state->PC += 1;
+            break;
+        case 0x1E:
+            MVI(&state->E, *(instruction+1));
+            state->PC += 1;
+            break;
+        case 0x26:
+            MVI(&state->H, *(instruction+1));
+            state->PC += 1;
+            break;
+        case 0x2E:
+            MVI(&state->L, *(instruction+1));
+            state->PC += 1;
+            break;
+        case 0x36:
+            MVI_M(state, *(instruction+1));
+            state->PC += 1;
+            break;
+        case 0x3E:
+            MVI(&state->A, *(instruction+1));
+            state->PC += 1;
             break;
         //BEGIN MOV GROUP
         case 0x40:

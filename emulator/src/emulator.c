@@ -431,10 +431,12 @@ static void RST(cpu* state, uint8_t offset) {
     state->PC = offset;
 }
 
+// Disable Interrupts
 static void DI(cpu* state) {
     state->interrupt_flag.INTE = 0;
 }
 
+// Enable Interrupts
 static void EI(cpu* state) {
     state->interrupt_flag.INTE = 1;
 }
@@ -443,6 +445,7 @@ static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
 }
 
+// Move Immediate
 static void MVI(uint8_t* reg, uint8_t data) {
     *(reg) = data;
 }
@@ -450,6 +453,16 @@ static void MVI(uint8_t* reg, uint8_t data) {
 static void MVI_M(cpu* state, uint8_t data) {
     uint16_t addr = (state->H << 8) | state->L;
     state->memory[addr] = data;
+}
+
+// Load Extended Immediate
+static void LXI(uint8_t* reg1, uint8_t* reg2, uint8_t high, uint8_t low) {
+    *(reg1) = high;
+    *(reg2) = low;
+}
+
+static void LXI_SP(uint16_t* sp, uint8_t high, uint8_t low) {
+    *(sp) = (high << 8) | low;
 }
 
 void disassemble_instruction(uint8_t* instruction) {
@@ -471,36 +484,55 @@ void execute(cpu* state) {
         case 0x20:
         case 0x30:
             break;
+        case 0x01:
+            // Load B and C (LXI B)
+            LXI(&state->B, &state->C, instruction[2], instruction[1]);
+            state->PC += 2;
         case 0x06:
-            MVI(&state->B, *(instruction+1));
+            MVI(&state->B, instruction[1]);
             state->PC += 1;
             break;
         case 0x0E:
-            MVI(&state->C, *(instruction+1));
+            MVI(&state->C, instruction[1]);
             state->PC += 1;
             break;
+        case 0x11:
+            // Load D and E (LXI D)
+            LXI(&state->D, &state->E, instruction[2], instruction[1]);
+            state->PC += 2;
+            break;
         case 0x16:
-            MVI(&state->D, *(instruction+1));
+            MVI(&state->D, instruction[1]);
             state->PC += 1;
             break;
         case 0x1E:
-            MVI(&state->E, *(instruction+1));
+            MVI(&state->E, instruction[1]);
             state->PC += 1;
             break;
+        case 0x21:
+            // Load H and L (LXI H)
+            LXI(&state->H, &state->L, instruction[2], instruction[1]);
+            state->PC += 2;
+            break;
         case 0x26:
-            MVI(&state->H, *(instruction+1));
+            MVI(&state->H, instruction[1]);
             state->PC += 1;
             break;
         case 0x2E:
-            MVI(&state->L, *(instruction+1));
+            MVI(&state->L, instruction[1]);
             state->PC += 1;
             break;
+        case 0x31:
+            // Load SP (LXI SP)
+            LXI_SP(&state->SP, instruction[1], instruction[0]);
+            state->PC += 2;
+            break;
         case 0x36:
-            MVI_M(state, *(instruction+1));
+            MVI_M(state, instruction[1]);
             state->PC += 1;
             break;
         case 0x3E:
-            MVI(&state->A, *(instruction+1));
+            MVI(&state->A, instruction[1]);
             state->PC += 1;
             break;
         //BEGIN MOV GROUP
@@ -1211,7 +1243,7 @@ void execute(cpu* state) {
             PUSH(state, state->B, state->C, 0);
             break;
         case 0xD5:
-            // PUSH D and E ("PUSH E")
+            // PUSH D and E ("PUSH D")
             PUSH(state, state->D, state->E, 0);
             break;
         case 0xE5:

@@ -109,7 +109,9 @@ static void SBB(cpu* state, uint8_t operand) {
         in a multibyte subtraction this means we'll have to borrow, so we set the borrow flag.
         We can use SBB to subtract two values and the borrow flag (the carry, but its acting as a borrow)
     */
-    state->cond.carry = (state->A < operand) ? 1 : 0;
+
+    // need to include old carry here as A - operand - carry is the same as A - (operand + carry)
+    state->cond.carry = (state->A < (operand + state->cond.carry)) ? 1 : 0;
     state->cond.parity = calculate_parity(result);
 
     state->A = result & 0xff;
@@ -391,7 +393,7 @@ static void RNZ(cpu* state) {
 // RM - Return if minus
 static void RM(cpu* state) {
     if (state->cond.sign == 1) {
-        state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
+        state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
         state->SP += 2;
     }
 }
@@ -399,7 +401,7 @@ static void RM(cpu* state) {
 // RP - Return if plus
 static void RP(cpu* state) {
     if (state->cond.sign == 0) {
-        state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
+        state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
         state->SP += 2;
     }
 }
@@ -407,7 +409,7 @@ static void RP(cpu* state) {
 // RPE - Return if Parity even
 static void RPE(cpu* state) {
     if (state->cond.parity == 1) {
-        state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
+        state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
         state->SP += 2;
     }
 }
@@ -415,7 +417,7 @@ static void RPE(cpu* state) {
 // RPO - Return if Parity odd
 static void RPO(cpu* state) {
     if (state->cond.parity == 0) {
-        state->PC = (state->memory[state->SP+1 << 8]) | state->memory[state->SP];
+        state->PC = (state->memory[state->SP+1] << 8) | state->memory[state->SP];
         state->SP += 2;
     }
 }
@@ -488,6 +490,7 @@ void execute(cpu* state) {
             // Load B and C (LXI B)
             LXI(&state->B, &state->C, instruction[2], instruction[1]);
             state->PC += 2;
+            break;
         case 0x06:
             MVI(&state->B, instruction[1]);
             state->PC += 1;
@@ -524,7 +527,7 @@ void execute(cpu* state) {
             break;
         case 0x31:
             // Load SP (LXI SP)
-            LXI_SP(&state->SP, instruction[1], instruction[0]);
+            LXI_SP(&state->SP, instruction[2], instruction[1]);
             state->PC += 2;
             break;
         case 0x36:

@@ -467,6 +467,30 @@ static void LXI_SP(uint16_t* sp, uint8_t high, uint8_t low) {
     *(sp) = (high << 8) | low;
 }
 
+// INX - Increment Register Pair (Increment Extended)
+static void INX(uint8_t* high, uint8_t* low) {
+    uint16_t value = ((*high) << 8) | (*low);
+    value++;
+    *high = value >> 8;
+    *low = value;
+}
+
+static void INX_SP(uint16_t* sp) {
+    (*sp)++;
+}
+
+// DCX - Decrement Register Pair (Decrement Extended)
+static void DCX(uint8_t* high, uint8_t* low) {
+    uint16_t value = ((*high) << 8) | (*low);
+    value--;
+    *high = value >> 8;
+    *low = value;
+}
+
+static void DCX_SP(uint16_t* sp) {
+    (*sp)--;
+}
+
 void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
     printf("------------------------------\n");
@@ -491,9 +515,16 @@ void execute(cpu* state) {
             LXI(&state->B, &state->C, instruction[2], instruction[1]);
             state->PC += 2;
             break;
+        case 0x03:
+            // Increment BC (INX B)
+            INX(&state->B, &state->C);
+            break;
         case 0x06:
             MVI(&state->B, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x0B:
+            DCX(&state->B, &state->C);
             break;
         case 0x0E:
             MVI(&state->C, instruction[1]);
@@ -504,9 +535,16 @@ void execute(cpu* state) {
             LXI(&state->D, &state->E, instruction[2], instruction[1]);
             state->PC += 2;
             break;
+        case 0x13:
+            // Increment DE (INX D)
+            INX(&state->D, &state->E);
+            break;
         case 0x16:
             MVI(&state->D, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x1B:
+            DCX(&state->D, &state->E);
             break;
         case 0x1E:
             MVI(&state->E, instruction[1]);
@@ -517,9 +555,15 @@ void execute(cpu* state) {
             LXI(&state->H, &state->L, instruction[2], instruction[1]);
             state->PC += 2;
             break;
+        case 0x23:
+            INX(&state->H, &state->L);
+            break;
         case 0x26:
             MVI(&state->H, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x2B:
+            DCX(&state->H, &state->L);
             break;
         case 0x2E:
             MVI(&state->L, instruction[1]);
@@ -530,9 +574,15 @@ void execute(cpu* state) {
             LXI_SP(&state->SP, instruction[2], instruction[1]);
             state->PC += 2;
             break;
+        case 0x33:
+            INX_SP(&state->SP);
+            break;
         case 0x36:
             MVI_M(state, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x3B:
+            DCX_SP(&state->SP);
             break;
         case 0x3E:
             MVI(&state->A, instruction[1]);
@@ -768,10 +818,7 @@ void execute(cpu* state) {
             MOV(&state->memory[memory_offset], state->L);
             break;
         case 0x76:
-            //MOV M, M
-            memory_offset = (state->H << 8) | state->L;
-            MOV(&state->memory[memory_offset], state->memory[memory_offset]);
-            break;
+            return;
         case 0x77:
             //MOV M, A
             memory_offset = (state->H << 8) | state->L;

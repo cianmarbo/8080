@@ -467,6 +467,26 @@ static void LXI_SP(uint16_t* sp, uint8_t high, uint8_t low) {
     *(sp) = (high << 8) | low;
 }
 
+// INR - Increment Register or Memory
+static void INR(cpu* state, uint8_t* reg) {
+    int result = ++(*reg);
+
+    state->cond.zero = (result & 0xff) ? 0 : 1;
+    state->cond.sign = (result & 0x80) ? 1 : 0;
+    state->cond.carry = (result > 0xff) ? 1 : 0;
+    state->cond.parity = calculate_parity(result);
+}
+
+// DCR Decrement Register or Memory
+static void DCR(cpu* state, uint8_t* reg) {
+    int result = --(*reg);
+
+    state->cond.zero = (result & 0xff) ? 0 : 1;
+    state->cond.sign = (result & 0x80) ? 1 : 0;
+    state->cond.carry = (result > 0xff) ? 1 : 0;
+    state->cond.parity = calculate_parity(result);
+}
+
 // INX - Increment Register Pair (Increment Extended)
 static void INX(uint8_t* high, uint8_t* low) {
     uint16_t value = ((*high) << 8) | (*low);
@@ -519,6 +539,12 @@ void execute(cpu* state) {
             // Increment BC (INX B)
             INX(&state->B, &state->C);
             break;
+        case 0x04:
+            INR(state, &state->B);
+            break;
+        case 0x05:
+            DCR(state, &state->B);
+            break;
         case 0x06:
             MVI(&state->B, instruction[1]);
             state->PC += 1;
@@ -526,6 +552,11 @@ void execute(cpu* state) {
         case 0x0B:
             DCX(&state->B, &state->C);
             break;
+        case 0x0C:
+            INR(state, &state->C);
+            break;
+        case 0x0D:
+            DCR(state, &state->C);
         case 0x0E:
             MVI(&state->C, instruction[1]);
             state->PC += 1;
@@ -539,12 +570,24 @@ void execute(cpu* state) {
             // Increment DE (INX D)
             INX(&state->D, &state->E);
             break;
+        case 0x14:
+            INR(state, &state->D);
+            break;
+        case 0x15:
+            DCR(state, &state->D);
+            break;
         case 0x16:
             MVI(&state->D, instruction[1]);
             state->PC += 1;
             break;
         case 0x1B:
             DCX(&state->D, &state->E);
+            break;
+        case 0x1C:
+            INR(state, &state->E);
+            break;
+        case 0x1D:
+            DCR(state, &state->E);
             break;
         case 0x1E:
             MVI(&state->E, instruction[1]);
@@ -558,12 +601,24 @@ void execute(cpu* state) {
         case 0x23:
             INX(&state->H, &state->L);
             break;
+        case 0x24:
+            INR(state, &state->H);
+            break;
+        case 0x25:
+            DCR(state, &state->H);
+            break;
         case 0x26:
             MVI(&state->H, instruction[1]);
             state->PC += 1;
             break;
         case 0x2B:
             DCX(&state->H, &state->L);
+            break;
+        case 0x2C:
+            INR(state, &state->L);
+            break;
+        case 0x2D:
+            DCR(state, &state->L);
             break;
         case 0x2E:
             MVI(&state->L, instruction[1]);
@@ -577,6 +632,14 @@ void execute(cpu* state) {
         case 0x33:
             INX_SP(&state->SP);
             break;
+        case 0x34:
+            memory_offset = (state->H << 8) | state->L;
+            INR(state, &state->memory[memory_offset]);
+            break;
+        case 0x35:
+            memory_offset = (state->H << 8) | state->L;
+            DCR(state, &state->memory[memory_offset]);
+            break;
         case 0x36:
             MVI_M(state, instruction[1]);
             state->PC += 1;
@@ -584,6 +647,11 @@ void execute(cpu* state) {
         case 0x3B:
             DCX_SP(&state->SP);
             break;
+        case 0x3C:
+            INR(state, &state->A);
+            break;
+        case 0x3D:
+            DCR(state, &state->A);
         case 0x3E:
             MVI(&state->A, instruction[1]);
             state->PC += 1;

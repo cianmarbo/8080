@@ -511,6 +511,36 @@ static void DCX_SP(uint16_t* sp) {
     (*sp)--;
 }
 
+/* Direct addressing instructions */
+
+// LDA - Load Accumulator Direct
+static void LDA(cpu* state, uint8_t high, uint8_t low) {
+    uint16_t memory_addr = (high << 8) | low;
+    state->A = state->memory[memory_addr];
+}
+
+// STA - Store Accumulator Direct
+static void STA(cpu* state, uint8_t high, uint8_t low) {
+    uint16_t memory_addr = (high << 8) | low;
+    state->memory[memory_addr] = state->A;
+}
+
+// LHLD - Load H and L Direct
+static void LHLD(cpu* state, uint8_t high, uint8_t low) {
+    uint16_t memory_addr = (high << 8) | low;
+    state->L = state->memory[memory_addr];
+    state->H = state->memory[memory_addr + 1];
+}
+
+// SHLD - Store H and L Direct
+static void SHLD(cpu* state, uint8_t high, uint8_t low) {
+    uint16_t memory_addr = (high <<  8) | low;
+    state->memory[memory_addr] = state->L;
+    state->memory[memory_addr + 1] = state->H;
+}
+
+/* End of direct addressing instructions */
+
 void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
     printf("------------------------------\n");
@@ -598,6 +628,11 @@ void execute(cpu* state) {
             LXI(&state->H, &state->L, instruction[2], instruction[1]);
             state->PC += 2;
             break;
+        case 0x22:
+            // Store H and L Direct
+            SHLD(state, instruction[2], instruction[1]);
+            state->PC += 2;
+            break;
         case 0x23:
             INX(&state->H, &state->L);
             break;
@@ -610,6 +645,11 @@ void execute(cpu* state) {
         case 0x26:
             MVI(&state->H, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x2A:
+            // Load H and L Direct
+            LHLD(state, instruction[2], instruction[1]);
+            state->PC += 2;
             break;
         case 0x2B:
             DCX(&state->H, &state->L);
@@ -629,6 +669,10 @@ void execute(cpu* state) {
             LXI_SP(&state->SP, instruction[2], instruction[1]);
             state->PC += 2;
             break;
+        case 0x32:
+            STA(state, instruction[2], instruction[1]);
+            state->PC += 2;
+            break;
         case 0x33:
             INX_SP(&state->SP);
             break;
@@ -643,6 +687,10 @@ void execute(cpu* state) {
         case 0x36:
             MVI_M(state, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x3A:
+            LDA(state, instruction[2], instruction[1]);
+            state->PC += 2;
             break;
         case 0x3B:
             DCX_SP(&state->SP);
@@ -1379,6 +1427,7 @@ void execute(cpu* state) {
         case 0xFB:
             // EI - Enable Interrupts
             EI(state);
+            break;
         case 0xF5:
             // PUSH A and PSW ("PUSH PSW")
             PUSH(state, state->A, 0, PSW_FLAG);

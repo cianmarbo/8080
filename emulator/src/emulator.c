@@ -511,6 +511,37 @@ static void DCX_SP(uint16_t* sp) {
     (*sp)--;
 }
 
+// CMA - Complement Accumulator
+static void CMA(cpu* state) {
+    state->A = ~state->A;
+}
+
+// DAA - Decimal Adjust Accumulator
+// Converts value in A to two 4-bit BCD values
+// In BCD, each 4-bit nibble represents a value 0-9, so each base 10 value is individually represented
+// More on BCD - https://en.wikipedia.org/wiki/Binary-coded_decimal
+static void DAA(cpu* state) {
+
+    state->cond.aux_carry = 0;
+    state->cond.carry = 0;
+
+    // check if lower nibble is greater than 9 by masking with 0b00001111
+    if ((state->A & 0xF) > 9 || state->cond.aux_carry == 1) {
+        state->A += 0x6;
+        state->cond.aux_carry = 1;
+    }
+
+    // check if upper nibble is greater than 9 by shifting and masking with 0b00001111
+    if (((state->A >> 4) & 0xF) > 9 || state->cond.carry == 1) {
+        state->A += 0x60; // 0x60 is 6 in the upper nibble
+        state->cond.carry = 1;
+    }
+
+    state->cond.parity = calculate_parity(state->A);
+    state->cond.zero = (state->A & 0xFF) ? 0 : 1;
+    state->cond.sign = (state->A & 0x80) ? 1 : 0;
+}
+
 /* Direct addressing instructions */
 
 // LDA - Load Accumulator Direct
@@ -663,6 +694,9 @@ void execute(cpu* state) {
         case 0x2E:
             MVI(&state->L, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x2F:
+            CMA(state);
             break;
         case 0x31:
             // Load SP (LXI SP)

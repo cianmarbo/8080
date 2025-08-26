@@ -209,8 +209,6 @@ static void POP(cpu* state, uint8_t* reg1, uint8_t* reg2, uint8_t pop_psw) {
     state->SP+=2;
 }
 
-
-
 // PCHL - "Load Program Counter" - Directly load PC with contents of H and L
 static void PCHL(cpu* state) {
     state->PC = state->H << 8 | state->L;
@@ -522,23 +520,21 @@ static void CMA(cpu* state) {
 // More on BCD - https://en.wikipedia.org/wiki/Binary-coded_decimal
 static void DAA(cpu* state) {
 
-    state->cond.aux_carry = 0;
-    state->cond.carry = 0;
-
     // check if lower nibble is greater than 9 by masking with 0b00001111
-    if ((state->A & 0xF) > 9 || state->cond.aux_carry == 1) {
+    if ((state->A & 0xf) > 9 || state->cond.aux_carry == 1) {
+        state->cond.aux_carry = (((state->A & 0xf) + 0x6) > 0xf) ? 1 : 0;
         state->A += 0x6;
-        state->cond.aux_carry = 1;
     }
 
     // check if upper nibble is greater than 9 by shifting and masking with 0b00001111
-    if (((state->A >> 4) & 0xF) > 9 || state->cond.carry == 1) {
-        state->A += 0x60; // 0x60 is 6 in the upper nibble
-        state->cond.carry = 1;
+    if (((state->A >> 4) & 0xf) > 9 || state->cond.carry == 1) {
+        uint16_t temp = (state->A + 0x60);
+        state->cond.carry = (temp > 0xff) ? 1 : 0;
+        state->A = temp & 0xff;
     }
 
     state->cond.parity = calculate_parity(state->A);
-    state->cond.zero = (state->A & 0xFF) ? 0 : 1;
+    state->cond.zero = (state->A & 0xff) ? 0 : 1;
     state->cond.sign = (state->A & 0x80) ? 1 : 0;
 }
 
@@ -572,6 +568,33 @@ static void SHLD(cpu* state, uint8_t high, uint8_t low) {
 
 /* End of direct addressing instructions */
 
+/* Register indirect addressing */
+
+// STAX - Store Accumulator
+static void STAX(cpu* state, uint8_t reg1, uint8_t reg2) {
+    uint16_t address = (reg1 << 8) | reg2;
+    state->memory[address] = state->A;
+}
+
+// LDAX - Load Accumulator
+static void LDAX(cpu* state, uint8_t reg1, uint8_t reg2) {
+    uint16_t address = (reg1 << 8) | reg2;
+    state->A = state->memory[address];
+}
+
+/* End register indirect addressing */
+
+// CMC - Complement Carry
+static void CMC(cpu* state) {
+    state->cond.carry = ~state->cond.carry;
+}
+
+// STC - Set Carry
+static void STC(cpu* state) {
+    state->cond.carry = 1;
+}
+
+
 void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
     printf("------------------------------\n");
@@ -596,6 +619,9 @@ void execute(cpu* state) {
             LXI(&state->B, &state->C, instruction[2], instruction[1]);
             state->PC += 2;
             break;
+        case 0x02:
+            STAX(state, state->B, state->C);
+            break;
         case 0x03:
             // Increment BC (INX B)
             INX(&state->B, &state->C);
@@ -609,6 +635,9 @@ void execute(cpu* state) {
         case 0x06:
             MVI(&state->B, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x0A:
+            LDAX(state, state->B, state->C);
             break;
         case 0x0B:
             DCX(&state->B, &state->C);
@@ -627,6 +656,9 @@ void execute(cpu* state) {
             LXI(&state->D, &state->E, instruction[2], instruction[1]);
             state->PC += 2;
             break;
+        case 0x12:
+            STAX(state, state->D, state->E);
+            break;
         case 0x13:
             // Increment DE (INX D)
             INX(&state->D, &state->E);
@@ -640,6 +672,9 @@ void execute(cpu* state) {
         case 0x16:
             MVI(&state->D, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x1A:
+            LDAX(state, state->D, state->E);
             break;
         case 0x1B:
             DCX(&state->D, &state->E);
@@ -722,6 +757,9 @@ void execute(cpu* state) {
             MVI_M(state, instruction[1]);
             state->PC += 1;
             break;
+        case 0x37:
+            STC(state);
+            break;
         case 0x3A:
             LDA(state, instruction[2], instruction[1]);
             state->PC += 2;
@@ -737,6 +775,9 @@ void execute(cpu* state) {
         case 0x3E:
             MVI(&state->A, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x3F:
+            CMC(state);
             break;
         //BEGIN MOV GROUP
         case 0x40:

@@ -608,6 +608,9 @@ void execute(cpu* state) {
 
     disassemble_instruction(instruction);
 
+    uint8_t addr_low = 0;
+    uint8_t addr_high = 0;
+
     switch(*instruction) {
         case 0x00:
         case 0x10:
@@ -647,6 +650,7 @@ void execute(cpu* state) {
             break;
         case 0x0D:
             DCR(state, &state->C);
+            break;
         case 0x0E:
             MVI(&state->C, instruction[1]);
             state->PC += 1;
@@ -772,6 +776,7 @@ void execute(cpu* state) {
             break;
         case 0x3D:
             DCR(state, &state->A);
+            break;
         case 0x3E:
             MVI(&state->A, instruction[1]);
             state->PC += 1;
@@ -1321,21 +1326,24 @@ void execute(cpu* state) {
         case 0xC0:
             RNZ(state);
             break;
-        case 0xC1:
-            // POP B and C ("POP B")
-            POP(state, &state->B, &state->C, 0);
-            break;
         case 0xC2:
-            JNZ(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JNZ(state, addr_high, addr_low);
             break;
         case 0xC3:
-            JMP(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JMP(state, addr_high, addr_low);
             break;
         case 0xC4:
-            CNZ(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CNZ(state, addr_high, addr_low);
+            break;
         case 0xC7:
             // RST 0
             RST(state, 0x0000);
@@ -1347,21 +1355,29 @@ void execute(cpu* state) {
             RET(state);
             break;
         case 0xCA:
-            JZ(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JZ(state, addr_high, addr_low);
             break;
         case 0xCB:
             // Additional opcode for JMP
-            JMP(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JMP(state, addr_high, addr_low);
             break;
         case 0xCC:
-            CZ(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CZ(state, addr_high, addr_low);
             break;
         case 0xCD:
-            CALL(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CALL(state, addr_high, addr_low);
             break;
         case 0xCF:
             RST(state, 0x0008);
@@ -1370,12 +1386,16 @@ void execute(cpu* state) {
             RNC(state);
             break;
         case 0xD2:
-            JNC(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JNC(state, addr_high, addr_low);
             break;
         case 0xD4:
-            CNC(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CNC(state, addr_high, addr_low);
             break;
         case 0xD7:
             RST(state, 0x0010);
@@ -1388,17 +1408,23 @@ void execute(cpu* state) {
             RET(state);
             break;
         case 0xDA:
-            JC(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JC(state, addr_high, addr_low);
             break;
         case 0xDC:
-            CC(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CC(state, addr_high, addr_low);
             break;
         case 0xDD:
             // Additional opcode for CALL
-            CALL(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CALL(state, addr_high, addr_low);
             break;
         case 0xDF:
             RST(state, 0x0018);
@@ -1407,12 +1433,16 @@ void execute(cpu* state) {
             RPO(state);
             break;
         case 0xE2:
-            JPO(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JPO(state, addr_high, addr_low);
             break;
         case 0xE4:
-            CPO(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CPO(state, addr_high, addr_low);
             break;
         case 0xE7:
             RST(state, 0x0020);
@@ -1424,17 +1454,23 @@ void execute(cpu* state) {
             PCHL(state);
             break;
         case 0xEA:
-            JPE(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JPE(state, addr_high, addr_low);
             break;
         case 0xEC:
-            CPE(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CPE(state, addr_high, addr_low);
             break;
         case 0xED:
             // Additional opcode for CALL
-            CALL(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CALL(state, addr_high, addr_low);
             break;
         case 0xEF:
             RST(state, 0x0028);
@@ -1443,8 +1479,20 @@ void execute(cpu* state) {
             RP(state);
             break;
         case 0xF2:
-            JP(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JP(state, addr_high, addr_low);
+            break;
+        case 0xF3:
+            // DI - Disable Interrupts
+            DI(state);
+            break;
+        case 0xF4:
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
+            state->PC += 2;
+            CP(state, addr_high, addr_low);
             break;
         case 0xF7:
             RST(state, 0x0030);
@@ -1453,19 +1501,33 @@ void execute(cpu* state) {
             RM(state);
             break;
         case 0xFA:
-            JM(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            JM(state, addr_high, addr_low);
+            break;
+        case 0xFB:
+            // EI - Enable Interrupts
+            EI(state);
             break;
         case 0xFC:
-            CM(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CM(state, addr_high, addr_low);
             break;
         case 0xFD:
-            CALL(state, state->memory[state->PC+1], state->memory[state->PC]);
+            addr_low = state->memory[state->PC];
+            addr_high = state->memory[state->PC+1];
             state->PC += 2;
+            CALL(state, addr_high, addr_low);
             break;
         case 0xFF:
             RST(state, 0x0038);
+            break;
+        case 0xC1:
+            // POP B and C ("POP B")
+            POP(state, &state->B, &state->C, 0);
             break;
         case 0xD1:
             // POP D and E ("POP D") 
@@ -1490,18 +1552,6 @@ void execute(cpu* state) {
         case 0xE5:
             // PUSH H and L ("PUSH H")
             PUSH(state, state->H, state->L, 0);
-            break;
-        case 0xF3:
-            // DI - Disable Interrupts
-            DI(state);
-            break;
-        case 0xF4:
-            CP(state, state->memory[state->PC+1], state->memory[state->PC]);
-            state->PC += 2;
-            break;
-        case 0xFB:
-            // EI - Enable Interrupts
-            EI(state);
             break;
         case 0xF5:
             // PUSH A and PSW ("PUSH PSW")
@@ -1528,7 +1578,7 @@ cpu* init_cpu(void) {
     state->PC = 0x0000;
 
     //allocate 64k (65536 bytes)
-    state->memory = (uint8_t*)malloc(sizeof(uint8_t) * 0xffff);
+    state->memory = (uint8_t*)malloc(sizeof(uint8_t) * 0x10000);
 
     state->cond.aux_carry = 0;
     state->cond.carry = 0;

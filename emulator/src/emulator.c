@@ -1144,7 +1144,6 @@ void execute(cpu* state) {
             //SUB L
             SUB(state, state->L);
             break;
-        // BEGIN SUBTRACTION WITH BORROW GROUP
         case 0x96:
             //SUB M
             memory_offset = (state->H << 8) | state->L;
@@ -1344,6 +1343,10 @@ void execute(cpu* state) {
             state->PC += 2;
             CNZ(state, addr_high, addr_low);
             break;
+        case 0xC6:
+            // ADI
+            ADD(state, state->memory[state->PC]);
+            break;
         case 0xC7:
             // RST 0
             RST(state, 0x0000);
@@ -1379,6 +1382,10 @@ void execute(cpu* state) {
             state->PC += 2;
             CALL(state, addr_high, addr_low);
             break;
+        case 0xCE:
+            // ACI
+            ADC(state, state->memory[state->PC]);
+            break;
         case 0xCF:
             RST(state, 0x0008);
             break;
@@ -1396,6 +1403,10 @@ void execute(cpu* state) {
             addr_high = state->memory[state->PC+1];
             state->PC += 2;
             CNC(state, addr_high, addr_low);
+            break;
+        case 0xD6:
+            // SUI
+            SUB(state, state->memory[state->PC]);
             break;
         case 0xD7:
             RST(state, 0x0010);
@@ -1426,6 +1437,10 @@ void execute(cpu* state) {
             state->PC += 2;
             CALL(state, addr_high, addr_low);
             break;
+        case 0xDE:
+            // SBI
+            SBB(state, state->memory[state->PC]);
+            break;
         case 0xDF:
             RST(state, 0x0018);
             break;
@@ -1446,6 +1461,10 @@ void execute(cpu* state) {
             break;
         case 0xE7:
             RST(state, 0x0020);
+            break;
+        case 0xE6:
+            // ANI
+            ANA(state, state->memory[state->PC]);
             break;
         case 0xE8:
             RPE(state);
@@ -1472,6 +1491,10 @@ void execute(cpu* state) {
             state->PC += 2;
             CALL(state, addr_high, addr_low);
             break;
+        case 0xEE:
+            // XRI
+            XRA(state, state->memory[state->PC]);
+            break;
         case 0xEF:
             RST(state, 0x0028);
             break;
@@ -1493,6 +1516,10 @@ void execute(cpu* state) {
             addr_high = state->memory[state->PC+1];
             state->PC += 2;
             CP(state, addr_high, addr_low);
+            break;
+        case 0xF6:
+            // ORI
+            ORA(state, state->memory[state->PC]);
             break;
         case 0xF7:
             RST(state, 0x0030);
@@ -1521,6 +1548,10 @@ void execute(cpu* state) {
             addr_high = state->memory[state->PC+1];
             state->PC += 2;
             CALL(state, addr_high, addr_low);
+            break;
+        case 0xFE:
+            // CPI
+            CMP(state, state->memory[state->PC]);
             break;
         case 0xFF:
             RST(state, 0x0038);

@@ -594,6 +594,31 @@ static void STC(cpu* state) {
     state->cond.carry = 1;
 }
 
+// RLC - Rotate Accumulator Left
+static void RLC(cpu* state) {
+    state->cond.carry = (state->A >> 7);
+    state->A = (state->A << 1) | state->cond.carry; 
+}
+
+// RRC - Rotate Accumulator Right
+static void RRC(cpu* state) {
+    state->cond.carry = state->A;
+    state->A = (state->A >> 1) | (state->cond.carry << 7);
+}
+
+// RAL - Rotate Accumulator Left Through Carry
+static void RAL(cpu* state) {
+    uint8_t old_carry = state->cond.carry;
+    state->cond.carry = (state->A >> 7);
+    state->A = (state->A << 1) | old_carry;
+}
+
+// RAR - Rotate Accumulator Right Through Carry
+static void RAR(cpu* state) {
+    uint8_t old_carry = state->cond.carry;
+    state->cond.carry = state->A;
+    state->A = (state->A >> 1) | (old_carry << 7);
+}
 
 void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
@@ -639,6 +664,9 @@ void execute(cpu* state) {
             MVI(&state->B, instruction[1]);
             state->PC += 1;
             break;
+        case 0x07:
+            RLC(state);
+            break;
         case 0x0A:
             LDAX(state, state->B, state->C);
             break;
@@ -654,6 +682,9 @@ void execute(cpu* state) {
         case 0x0E:
             MVI(&state->C, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x0F:
+            RRC(state);
             break;
         case 0x11:
             // Load D and E (LXI D)
@@ -677,6 +708,9 @@ void execute(cpu* state) {
             MVI(&state->D, instruction[1]);
             state->PC += 1;
             break;
+        case 0x17:
+            RAL(state);
+            break;
         case 0x1A:
             LDAX(state, state->D, state->E);
             break;
@@ -692,6 +726,9 @@ void execute(cpu* state) {
         case 0x1E:
             MVI(&state->E, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x1F:
+            RAR(state);
             break;
         case 0x21:
             // Load H and L (LXI H)
@@ -1386,7 +1423,7 @@ void execute(cpu* state) {
         case 0xCE:
             // ACI
             ADC(state, state->memory[state->PC]);
-            state->PC + 1;
+            state->PC += 1;
             break;
         case 0xCF:
             RST(state, 0x0008);

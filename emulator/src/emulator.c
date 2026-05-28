@@ -1346,6 +1346,7 @@ void execute(cpu* state) {
         case 0xC6:
             // ADI
             ADD(state, state->memory[state->PC]);
+            state->PC += 1;
             break;
         case 0xC7:
             // RST 0
@@ -1385,6 +1386,7 @@ void execute(cpu* state) {
         case 0xCE:
             // ACI
             ADC(state, state->memory[state->PC]);
+            state->PC + 1;
             break;
         case 0xCF:
             RST(state, 0x0008);
@@ -1407,6 +1409,7 @@ void execute(cpu* state) {
         case 0xD6:
             // SUI
             SUB(state, state->memory[state->PC]);
+            state->PC += 1;
             break;
         case 0xD7:
             RST(state, 0x0010);
@@ -1440,6 +1443,7 @@ void execute(cpu* state) {
         case 0xDE:
             // SBI
             SBB(state, state->memory[state->PC]);
+            state->PC += 1;
             break;
         case 0xDF:
             RST(state, 0x0018);
@@ -1465,6 +1469,7 @@ void execute(cpu* state) {
         case 0xE6:
             // ANI
             ANA(state, state->memory[state->PC]);
+            state->PC += 1;
             break;
         case 0xE8:
             RPE(state);
@@ -1494,6 +1499,7 @@ void execute(cpu* state) {
         case 0xEE:
             // XRI
             XRA(state, state->memory[state->PC]);
+            state->PC += 1;
             break;
         case 0xEF:
             RST(state, 0x0028);
@@ -1520,6 +1526,7 @@ void execute(cpu* state) {
         case 0xF6:
             // ORI
             ORA(state, state->memory[state->PC]);
+            state->PC += 1;
             break;
         case 0xF7:
             RST(state, 0x0030);
@@ -1552,6 +1559,7 @@ void execute(cpu* state) {
         case 0xFE:
             // CPI
             CMP(state, state->memory[state->PC]);
+            state->PC += 1;
             break;
         case 0xFF:
             RST(state, 0x0038);

@@ -649,6 +649,35 @@ static void DAD_SP(cpu* state) {
     state->L = result_lower;
 }
 
+// XCHG - Exchange Registers
+static void XCHG(cpu* state) {
+    uint8_t H = state->H;
+    uint8_t L = state->L;
+
+    state->H = state->D;
+    state->L = state->E;
+
+    state->D = H;
+    state->E = L;
+}
+
+// XTHL - Exchange Stack
+static void XTHL(cpu* state) {
+    uint8_t H = state->H;
+    uint8_t L = state->L;
+
+    state->H = state->memory[state->SP + 1];
+    state->L = state->memory[state->SP];
+
+    state->memory[state->SP + 1] = H;
+    state->memory[state->SP] = L;
+}
+
+// SPHL - Load SP from H and L
+static void SPHL(cpu* state) {
+    state->SP = (state->H << 8) | state->L;
+}
+
 void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
     printf("------------------------------\n");
@@ -787,6 +816,9 @@ void execute(cpu* state) {
         case 0x26:
             MVI(&state->H, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x27:
+            DAA(state);
             break;
         case 0x29:
             DAD(state, state->H, state->L);
@@ -1535,6 +1567,9 @@ void execute(cpu* state) {
             state->PC += 2;
             JPO(state, addr_high, addr_low);
             break;
+        case 0xE3:
+            XTHL(state);
+            break;
         case 0xE4:
             addr_low = state->memory[state->PC];
             addr_high = state->memory[state->PC+1];
@@ -1560,6 +1595,9 @@ void execute(cpu* state) {
             addr_high = state->memory[state->PC+1];
             state->PC += 2;
             JPE(state, addr_high, addr_low);
+            break;
+        case 0xEB:
+            XCHG(state);
             break;
         case 0xEC:
             addr_low = state->memory[state->PC];
@@ -1611,6 +1649,9 @@ void execute(cpu* state) {
             break;
         case 0xF8:
             RM(state);
+            break;
+        case 0xF9:
+            SPHL(state);
             break;
         case 0xFA:
             addr_low = state->memory[state->PC];

@@ -696,9 +696,13 @@ void execute(cpu* state) {
 
     switch(*instruction) {
         case 0x00:
+        case 0x08:
         case 0x10:
+        case 0x18:
         case 0x20:
+        case 0x28:
         case 0x30:
+        case 0x38:
             break;
         case 0x01:
             // Load B and C (LXI B)

@@ -620,6 +620,35 @@ static void RAR(cpu* state) {
     state->A = (state->A >> 1) | (old_carry << 7);
 }
 
+// DAD - Double Add
+static void DAD(cpu* state, uint8_t reg1, uint8_t reg2) {
+    uint16_t op1 = (reg1 << 8) | reg2;
+    uint16_t op2 = (state->H << 8) | state->L;
+
+    uint16_t result_lower = (op1 & 0xff) + (op2 & 0xff);
+    state->cond.carry = (result_lower > 0xff) ? 1 : 0;
+    
+    uint16_t result_higher = ((op1 >> 8) + (op2 >> 8)) + state->cond.carry;
+    state->cond.carry = (result_higher > 0xff) ? 1 : 0;
+
+    state->H = result_higher;
+    state->L = result_lower;
+}
+
+static void DAD_SP(cpu* state) {
+    uint16_t op1 = state->SP;
+    uint16_t op2 = (state->H << 8) | state->L;
+
+    uint16_t result_lower = (op1 & 0xff) + (op2 & 0xff);
+    state->cond.carry = (result_lower > 0xff) ? 1 : 0;
+    
+    uint16_t result_higher = ((op1 >> 8) + (op2 >> 8)) + state->cond.carry;
+    state->cond.carry = (result_higher > 0xff) ? 1 : 0;
+
+    state->H = result_higher;
+    state->L = result_lower;
+}
+
 void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
     printf("------------------------------\n");
@@ -667,6 +696,9 @@ void execute(cpu* state) {
         case 0x07:
             RLC(state);
             break;
+        case 0x09:
+            DAD(state, state->B, state->C);
+            break;
         case 0x0A:
             LDAX(state, state->B, state->C);
             break;
@@ -711,6 +743,9 @@ void execute(cpu* state) {
         case 0x17:
             RAL(state);
             break;
+        case 0x19:
+            DAD(state, state->D, state->E);
+            break;
         case 0x1A:
             LDAX(state, state->D, state->E);
             break;
@@ -752,6 +787,9 @@ void execute(cpu* state) {
         case 0x26:
             MVI(&state->H, instruction[1]);
             state->PC += 1;
+            break;
+        case 0x29:
+            DAD(state, state->H, state->L);
             break;
         case 0x2A:
             // Load H and L Direct
@@ -800,6 +838,9 @@ void execute(cpu* state) {
             break;
         case 0x37:
             STC(state);
+            break;
+        case 0x39:
+            DAD_SP(state);
             break;
         case 0x3A:
             LDA(state, instruction[2], instruction[1]);

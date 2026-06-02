@@ -15,6 +15,8 @@ const char* build_date = __DATE__;
 
 uint8_t* register_array = NULL;
 
+static int file_size = 0;
+
 // Condition bits
 struct flags {
     uint8_t carry       : 1;
@@ -683,13 +685,13 @@ void disassemble_instruction(uint8_t* instruction) {
     printf("------------------------------\n");
 }
 
-void execute(cpu* state) {
+void execute(cpu* state, int execution_counter) {
     
     uint8_t* instruction = &state->memory[state->PC];
+    disassemble_instruction(instruction);
+    
     uint16_t memory_offset;
     state->PC++; //increment the Program Counter after every instruction
-
-    disassemble_instruction(instruction);
 
     uint8_t addr_low = 0;
     uint8_t addr_high = 0;
@@ -1858,13 +1860,56 @@ void display_intro() {
 	fclose(intro_file);
 }
 
+uint8_t* open_rom(char* fileName) {
+
+	FILE* rom_file = fopen(fileName, "r");
+
+	if(!rom_file) {
+		printf("please point to a valid ROM...\n");
+		exit(0);
+	}
+
+	//set the file position indicator to the end of the file (measured in bytes)
+	fseek(rom_file, 0, SEEK_END);
+	//get the file position indicator to store the size of the file in bytes
+	file_size = ftell(rom_file);
+	//set the file position indicator to the beginning of the file
+	rewind(rom_file);
+
+	uint8_t* rom_buffer = (uint8_t*) malloc(file_size);
+
+	fread(rom_buffer, file_size, 1, rom_file);
+	fclose(rom_file);
+
+	return rom_buffer;
+}
+
+void write_rom(cpu* state, uint8_t* rom_buffer, int file_size) {
+    for (int i = 0; i < file_size; i++) {
+        state->memory[i] = rom_buffer[i];
+        if (!(state->memory[i] == rom_buffer[i])) {
+            fprintf(stderr, "There was an error writing the ROM :(");
+        } 
+    }
+}
+
 int main(int argc, char** argv) {
 
     display_intro();
 
     cpu* state = init_cpu();
 
-    test(state);
+    // test(state);
+
+    uint8_t* rom_buffer = open_rom(argv[1]);
+
+    write_rom(state, rom_buffer, file_size);
+
+    int execution_counter = 0;
+
+    while(execution_counter < file_size) {
+        execute(state, execution_counter);
+    }
 
     handle_args(argc, argv, state);
 

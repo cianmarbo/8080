@@ -2,8 +2,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
+
+#include <SDL2/SDL.h>
 
 #include "disasm.h"
+
+bool running = NULL;
 
 const char* version_string = "0.0.3";
 const char* build_date = __DATE__;
@@ -12,6 +17,117 @@ const char* build_date = __DATE__;
 #define MAX_INTRO_CHARS 50
 
 #define PSW_FLAG        1
+
+SDL_Window* window = NULL;
+SDL_Renderer* renderer = NULL;
+SDL_Texture* texture = NULL;
+
+uint32_t* frame_buffer;
+
+#define DISP_SCALE          2
+#define WINDOW_HEIGHT       (224 * DISP_SCALE)
+#define WINDOW_WIDTH        (256 * DISP_SCALE)
+#define HOST_PIXEL_STRIDE   4
+
+#define FRAME_BUFFER_SIZE_BYTES (WINDOW_HEIGHT * WINDOW_WIDTH * HOST_PIXEL_STRIDE)
+
+#define REFRESH_RATE    60
+#define CPU_CLOCK       2000000
+
+#define VBLANK_RATE     CPU_CLOCK / REFRESH_RATE //how many CPU cycles a frame takes up (CPU cyles per frame)
+
+bool init_window(void) {
+
+    if (SDL_InitSubSystem(SDL_INIT_EVERYTHING) != 0) {
+        fprintf(stderr, "SDL failed to init...\n");
+        return false;
+    }
+
+    window = SDL_CreateWindow(
+        "8080",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
+        0
+    );
+
+    if (!window) {
+        fprintf(stderr, "There was an error creating a window...\n");
+        return false;
+    }
+
+    renderer = SDL_CreateRenderer(window, -1, 0);
+
+    if (!renderer) {
+        fprintf(stderr, "There was an error creating an SDL Renderer...\n");
+        return false;
+    }
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    texture = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_ARGB8888,
+        SDL_TEXTUREACCESS_STREAMING,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT
+    );
+
+    if (!texture) {
+        fprintf(stderr, "There was a problem creating an SDL texture...\n");
+        return false;
+    }
+
+    frame_buffer = (uint32_t*)malloc(FRAME_BUFFER_SIZE_BYTES);
+
+    return true;
+}
+
+void clear_framebuffer(void) {
+    for (int i = 0; i < WINDOW_WIDTH * WINDOW_HEIGHT; i++) {
+        frame_buffer[i] = 0xFF000000;
+    }
+}
+
+void render_framebuffer(void) {
+
+    SDL_UpdateTexture(texture, NULL, frame_buffer, WINDOW_WIDTH * HOST_PIXEL_STRIDE);
+
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+
+    SDL_RenderPresent(renderer);
+}
+
+void process_input(void) {
+    SDL_Event event;
+    SDL_PollEvent(&event);
+
+    switch(event.type) {
+        case SDL_QUIT:
+            running = false;
+            break;
+    }
+}
+
+void destroy_window(void) {
+    SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyTexture(texture);
+
+    SDL_Quit();
+}
+
+void quit(void) {
+    destroy_window();
+    free(frame_buffer);
+}
+
+void draw_pixel(uint32_t posX, uint32_t posY, uint32_t colour) {
+    if (posX < WINDOW_WIDTH && posY < WINDOW_HEIGHT) {
+        frame_buffer[(WINDOW_WIDTH * posY) + posX] = colour;
+    }
+}
 
 uint8_t* register_array = NULL;
 
@@ -52,6 +168,8 @@ struct cpu {
 
     // Condition bits
     flags cond;
+
+    uint32_t total_cpu_cycles;
 };
 
 typedef struct cpu cpu;
@@ -443,6 +561,16 @@ static void EI(cpu* state) {
     state->interrupt_flag.INTE = 1;
 }
 
+// generate_interrupt - emulates the display hardware asserting an interrupt line.
+// The frame loop calls this twice per frame: RST 1 at mid-screen, RST 2 at VBlank.
+static void generate_interrupt(cpu* state, uint8_t interrupt_num) {
+    // TODO(human): only act when interrupts are enabled (state->interrupt_flag.INTE).
+    // When enabled: clear INTE first (the 8080 blocks further interrupts until the
+    // ISR re-enables them with EI), then perform an RST to the interrupt vector.
+    // Recall RST n jumps to address n * 8 — and you already have an RST() helper.
+    RST(state, interrupt_num * 8);
+}
+
 static void MOV(uint8_t* op, uint8_t operand) {
     *(op) = operand;
 }
@@ -682,10 +810,32 @@ static void SPHL(cpu* state) {
 
 void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
-    printf("------------------------------\n");
 }
 
-void execute(cpu* state, int execution_counter) {
+// Number of clock cycles (states) each opcode takes, indexed by the opcode byte.
+// For the conditional CALL/RET opcodes this holds the *branch-not-taken* cost;
+// add 6 more cycles when the branch is actually taken (not yet accounted for).
+static const uint8_t cycles8080[256] = {
+//  x0  x1  x2  x3  x4  x5  x6  x7  x8  x9  xa  xb  xc  xd  xe  xf
+     4, 10,  7,  5,  5,  5,  7,  4,  4, 10,  7,  5,  5,  5,  7,  4, // 0x
+     4, 10,  7,  5,  5,  5,  7,  4,  4, 10,  7,  5,  5,  5,  7,  4, // 1x
+     4, 10, 16,  5,  5,  5,  7,  4,  4, 10, 16,  5,  5,  5,  7,  4, // 2x
+     4, 10, 13,  5, 10, 10, 10,  4,  4, 10, 13,  5,  5,  5,  7,  4, // 3x
+     5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5, // 4x
+     5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5, // 5x
+     5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5, // 6x
+     7,  7,  7,  7,  7,  7,  7,  7,  5,  5,  5,  5,  5,  5,  7,  5, // 7x
+     4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4, // 8x
+     4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4, // 9x
+     4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4, // ax
+     4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4, // bx
+     5, 10, 10, 10, 11, 11,  7, 11,  5, 10, 10, 10, 11, 17,  7, 11, // cx
+     5, 10, 10, 10, 11, 11,  7, 11,  5, 10, 10, 10, 11, 17,  7, 11, // dx
+     5, 10, 10, 18, 11, 11,  7, 11,  5,  5, 10,  5, 11, 17,  7, 11, // ex
+     5, 10, 10,  4, 11, 11,  7, 11,  5,  5, 10,  4, 11, 17,  7, 11, // fx
+};
+
+void execute(cpu* state) {
     
     uint8_t* instruction = &state->memory[state->PC];
     disassemble_instruction(instruction);
@@ -695,6 +845,8 @@ void execute(cpu* state, int execution_counter) {
 
     uint8_t addr_low = 0;
     uint8_t addr_high = 0;
+
+    state->total_cpu_cycles = state->total_cpu_cycles + cycles8080[*instruction];
 
     switch(*instruction) {
         case 0x00:
@@ -1763,13 +1915,7 @@ void test(cpu* state) {
     state->memory[0x0000] = 0xc5; // push b and c
     state->memory[0x0001] = 0xe1; // pop into h and l
 
-
-    // execute(state);
-
-    // we update PC directly everytime we call execute()
-    while(state->PC < 10) {
-        execute(state);
-    }
+    execute(state);
 }
 
 // Output register contents to stdout
@@ -1885,33 +2031,95 @@ uint8_t* open_rom(char* fileName) {
 }
 
 void write_rom(cpu* state, uint8_t* rom_buffer, int file_size) {
+    static int memory_offset = 0;
     for (int i = 0; i < file_size; i++) {
-        state->memory[i] = rom_buffer[i];
-        if (!(state->memory[i] == rom_buffer[i])) {
-            fprintf(stderr, "There was an error writing the ROM :(");
-        } 
+        state->memory[memory_offset+i] = rom_buffer[i];
+        if (!(state->memory[memory_offset+i] == rom_buffer[i])) {
+            fprintf(stderr, "There was an error writing the ROM");
+        }
     }
+
+    memory_offset += file_size;
+}
+
+void render(cpu* state) {
+    clear_framebuffer();
+
+    uint16_t vid_mem_index = 0x2400;
+
+    for (int y = 0; y < WINDOW_HEIGHT; y++) {
+        for (int x = 0; x < WINDOW_WIDTH; x+=8) {
+            for (int bit = 0; bit < 8; bit++) {
+                frame_buffer[(y * WINDOW_WIDTH) + (x + bit)] = ((state->memory[vid_mem_index] >> bit) & 0x1) == 1 ? 0xFFFFFFFF: 0xFF000000;
+                //frame_buffer[(y * WINDOW_WIDTH) + (x + bit)] = ((state->memory[vid_mem_index] >> bit) & 0x1) == 1 ? 0xFF000000 : 0xFFFFFFFF;
+            }
+            vid_mem_index++;
+        }
+    }
+
+    render_framebuffer();
 }
 
 int main(int argc, char** argv) {
 
-    display_intro();
+    //display_intro();
 
     cpu* state = init_cpu();
 
     // test(state);
 
-    uint8_t* rom_buffer = open_rom(argv[1]);
+    uint8_t* rom_1 = open_rom(argv[1]);
+    write_rom(state, rom_1, file_size);
 
-    write_rom(state, rom_buffer, file_size);
+    uint8_t* rom_2 = open_rom(argv[2]);
+    write_rom(state, rom_2, file_size);
 
-    int execution_counter = 0;
+    uint8_t* rom_3 = open_rom(argv[3]);
+    write_rom(state, rom_3, file_size);
 
-    while(execution_counter < file_size) {
-        execute(state, execution_counter);
+    uint8_t* rom_4 = open_rom(argv[4]);
+    write_rom(state, rom_4, file_size);
+
+    // for (int i = 0; i < 8196; i++) {
+    //     printf("%02x\n", state->memory[i]);
+    // }
+
+    if (!init_window()) {
+        return 1;
+    }
+    running = true;
+
+    while(running) {
+        process_input();
+
+        // Start each frame's cycle budget from zero so the interrupts below
+        // fire at the same beam positions every frame.
+        state->total_cpu_cycles = 0;
+
+        // below we're basically using the CPU clock as a way to measure time
+        // the VBLANK_RATE is how many CPU cycles it takes to render a frame
+        // typically the display hardware in the arcade cabinet would be setup to send the interrupt every half scan
+        // obviously we don't have a real display, so we simulate that by allowing the CPU to run what time it takes a half a frame to be rendered
+        // we do that by checking if the number of CPU cycles executed so far is less than the half the amount of cycles it takes to render 1 frame
+
+        // Run the first half of the frame, then the mid-screen interrupt.
+        while (state->total_cpu_cycles < (VBLANK_RATE / 2)) {
+            execute(state);
+        }
+        generate_interrupt(state, 1);   // RST 1 -> 0x08 (mid-screen)
+
+        // Run the rest of the frame, then the VBlank interrupt.
+        while (state->total_cpu_cycles < VBLANK_RATE) {
+            execute(state);
+        }
+        generate_interrupt(state, 2);   // RST 2 -> 0x10 (VBlank)
+
+        render(state);
     }
 
     handle_args(argc, argv, state);
+
+    quit();
 
     return 0;
 }

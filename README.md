@@ -85,9 +85,9 @@ disassembler/    the standalone disassembler
 
 These references were invaluable while building the emulator:
 
-- [Intel 8080 opcode reference table](https://www.pastraiser.com/cpu/i8080/i8080_opcodes.html) — every opcode, its bytes, cycles, and flags at a glance
-- [Space Invaders hardware notes](https://www.computerarcheology.com/Arcade/SpaceInvaders/Hardware.html) — the cabinet's memory map, I/O ports, and interrupt behaviour
-- [Intel 8080 Programmer's Manual (PDF)](https://altairclone.com/downloads/manuals/8080%20Programmers%20Manual.pdf) — the official instruction-set reference
+- [Intel 8080 opcode reference table](https://www.pastraiser.com/cpu/i8080/i8080_opcodes.html).
+- [Space Invaders hardware notes](https://www.computerarcheology.com/Arcade/SpaceInvaders/Hardware.html).
+- [Intel 8080 Programmer's Manual (PDF)](https://altairclone.com/downloads/manuals/8080%20Programmers%20Manual.pdf).
 
 ## License
 

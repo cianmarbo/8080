@@ -1,12 +1,6 @@
-```
- ________  ________  ________  ________
-|\   __  \|\   __  \|\   __  \|\   __  \
-\ \  \|\  \ \  \|\  \ \  \|\  \ \  \|\  \
- \ \   __  \ \  \\\  \ \   __  \ \  \\\  \
-  \ \  \|\  \ \  \\\  \ \  \|\  \ \  \\\  \
-   \ \_______\ \_______\ \_______\ \_______\
-    \|_______|\|_______|\|_______|\|_______|
-```
+<p align="center">
+  <img src="logo.png" alt="8080 logo" width="480">
+</p>
 
 # 8080
 
@@ -83,7 +77,7 @@ disassembler/    the standalone disassembler
 
 ## Resources
 
-These references were invaluable while building the emulator:
+These references were invaluable:
 
 - [Intel 8080 opcode reference table](https://www.pastraiser.com/cpu/i8080/i8080_opcodes.html).
 - [Space Invaders hardware notes](https://www.computerarcheology.com/Arcade/SpaceInvaders/Hardware.html).

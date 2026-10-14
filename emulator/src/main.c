@@ -100,6 +100,9 @@ int main(int argc, char** argv) {
     }
     running = true;
 
+    // Play the intro logo animation before handing control to the game.
+    splash_screen();
+
     while(running) {
         process_input();
 

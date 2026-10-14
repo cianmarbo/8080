@@ -6,13 +6,12 @@
 #include <SDL2/SDL.h>
 
 #include "display.h"
+#include "crt.h"
 #include "logo_bitmap.h"   // LOGO_WIDTH, LOGO_HEIGHT and the logo[] pixel data
 
 bool running = NULL;
 
 SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-SDL_Texture* texture = NULL;
 
 uint32_t* frame_buffer;
 
@@ -23,13 +22,15 @@ bool init_window(void) {
         return false;
     }
 
+    crt_set_gl_attributes();
+
     window = SDL_CreateWindow(
         "8080",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
-        0
+        SDL_WINDOW_OPENGL
     );
 
     if (!window) {
@@ -37,25 +38,7 @@ bool init_window(void) {
         return false;
     }
 
-    renderer = SDL_CreateRenderer(window, -1, 0);
-
-    if (!renderer) {
-        fprintf(stderr, "There was an error creating an SDL Renderer...\n");
-        return false;
-    }
-
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    texture = SDL_CreateTexture(
-        renderer,
-        SDL_PIXELFORMAT_ARGB8888,
-        SDL_TEXTUREACCESS_STREAMING,
-        GAME_WIDTH,
-        GAME_HEIGHT
-    );
-
-    if (!texture) {
-        fprintf(stderr, "There was a problem creating an SDL texture...\n");
+    if (!crt_init(window)) {
         return false;
     }
 
@@ -72,11 +55,7 @@ void clear_framebuffer(void) {
 
 void render_framebuffer(void) {
 
-    SDL_UpdateTexture(texture, NULL, frame_buffer, GAME_WIDTH * HOST_PIXEL_STRIDE);
-
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-
-    SDL_RenderPresent(renderer);
+    crt_draw(frame_buffer);
 }
 
 void process_input(void) {
@@ -91,9 +70,8 @@ void process_input(void) {
 }
 
 void destroy_window(void) {
+    crt_destroy();
     SDL_DestroyWindow(window);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyTexture(texture);
 
     SDL_Quit();
 }

@@ -5,12 +5,17 @@
 
 #include "cpu.h"
 
-#define DISP_SCALE          1
-#define WINDOW_HEIGHT       (224 * DISP_SCALE)
-#define WINDOW_WIDTH        (256 * DISP_SCALE)
+// Native resolution of the cabinet's CRT (portrait: it's mounted on its side)
+#define GAME_WIDTH          224
+#define GAME_HEIGHT         256
+
+// The window is the game screen scaled up; SDL stretches the texture to fit
+#define DISP_SCALE          3
+#define WINDOW_WIDTH        (GAME_WIDTH * DISP_SCALE)
+#define WINDOW_HEIGHT       (GAME_HEIGHT * DISP_SCALE)
 #define HOST_PIXEL_STRIDE   4
 
-#define FRAME_BUFFER_SIZE_BYTES (WINDOW_HEIGHT * WINDOW_WIDTH * HOST_PIXEL_STRIDE)
+#define FRAME_BUFFER_SIZE_BYTES (GAME_WIDTH * GAME_HEIGHT * HOST_PIXEL_STRIDE)
 
 #define REFRESH_RATE    60
 #define CPU_CLOCK       2000000
@@ -29,5 +34,6 @@ void destroy_window(void);
 void quit(void);
 void draw_pixel(uint32_t posX, uint32_t posY, uint32_t colour);
 void render(cpu* state);
+void splash_screen(void);
 
 #endif

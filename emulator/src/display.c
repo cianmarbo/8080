@@ -7,6 +7,7 @@
 
 #include "display.h"
 #include "crt.h"
+#include "input.h"
 #include "logo_bitmap.h"   // LOGO_WIDTH, LOGO_HEIGHT and the logo[] pixel data
 
 bool running = NULL;
@@ -60,12 +61,22 @@ void render_framebuffer(void) {
 
 void process_input(void) {
     SDL_Event event;
-    SDL_PollEvent(&event);
 
-    switch(event.type) {
-        case SDL_QUIT:
-            running = false;
-            break;
+    // handle every event waiting this frame, not just the first one
+    while (SDL_PollEvent(&event)) {
+        switch(event.type) {
+            case SDL_QUIT:
+                running = false;
+                break;
+            case SDL_KEYDOWN:
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    running = false;
+                }
+                break;
+            default:
+                input_handle_event(&event);
+                break;
+        }
     }
 }
 

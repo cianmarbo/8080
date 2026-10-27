@@ -18,3 +18,12 @@ The black border around the curved, rounded-corner picture, imitating the edge o
 
 **Phosphor persistence**:
 The short fading trail left behind by bright, moving pixels, like a real CRT's afterglow.
+
+**Input port**:
+A numbered channel the game reads (with `IN`) to learn what the player is pressing: coin, start buttons, and left, right and fire for each player.
+
+**Shift register**:
+Cabinet hardware the game uses to position sprites at any horizontal pixel offset. The game writes data and an offset to it, then reads back the shifted result.
+
+**Coin**:
+The credit the player must insert before a game can be started.

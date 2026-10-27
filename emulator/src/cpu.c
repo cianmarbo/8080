@@ -644,6 +644,34 @@ static void SPHL(cpu* state) {
     state->SP = (state->H << 8) | state->L;
 }
 
+// IN - Read a byte from an input port into A
+// Ports 0-2 hold the player inputs and DIP switches, port 3 returns the shift register result
+static void IN(cpu* state, uint8_t port) {
+    switch (port) {
+        case 0:
+        case 1:
+        case 2:
+            state->A = state->in_ports[port];
+            break;
+        case 3:
+            state->A = (state->shift_data >> (8 - state->shift_offset)) & 0xFF;
+            break;
+    }
+}
+
+// OUT - Write A to an output port
+// Ports 2 and 4 drive the shift register. Sound (3 and 5) and the watchdog (6) are ignored for now.
+static void OUT(cpu* state, uint8_t port) {
+    switch (port) {
+        case 2:
+            state->shift_offset = state->A & 0x7;
+            break;
+        case 4:
+            state->shift_data = (state->shift_data >> 8) | (state->A << 8);
+            break;
+    }
+}
+
 static void disassemble_instruction(uint8_t* instruction) {
     disassemble(instruction);
 }
@@ -1504,6 +1532,11 @@ void execute(cpu* state) {
             state->PC += 2;
             JNC(state, addr_high, addr_low);
             break;
+        case 0xD3:
+            // OUT
+            OUT(state, state->memory[state->PC]);
+            state->PC += 1;
+            break;
         case 0xD4:
             addr_low = state->memory[state->PC];
             addr_high = state->memory[state->PC+1];
@@ -1530,6 +1563,11 @@ void execute(cpu* state) {
             addr_high = state->memory[state->PC+1];
             state->PC += 2;
             JC(state, addr_high, addr_low);
+            break;
+        case 0xDB:
+            // IN
+            IN(state, state->memory[state->PC]);
+            state->PC += 1;
             break;
         case 0xDC:
             addr_low = state->memory[state->PC];
@@ -1737,6 +1775,12 @@ cpu* init_cpu(void) {
     state->cond.parity = 0;
     state->cond.sign = 0;
     state->cond.zero = 0;
+
+    state->in_ports[0] = 0;
+    state->in_ports[1] = 0;
+    state->in_ports[2] = 0;
+    state->shift_data = 0;
+    state->shift_offset = 0;
 
     return state;
 }

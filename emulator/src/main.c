@@ -6,6 +6,7 @@
 
 #include "cpu.h"
 #include "display.h"
+#include "input.h"
 #include "rom.h"
 
 const char* version_string = "0.0.3";
@@ -105,6 +106,7 @@ int main(int argc, char** argv) {
 
     while(running) {
         process_input();
+        update_input(state);
 
         // Start each frame's cycle budget from zero so the interrupts below
         // fire at the same beam positions every frame.

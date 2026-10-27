@@ -38,6 +38,11 @@ struct cpu {
 
     interrupt interrupt_flag;
 
+    // I/O ports
+    uint8_t in_ports[3];        // what IN reads from ports 0-2; filled in by update_input()
+    uint16_t shift_data;        // the shift register (the game writes it a byte at a time via OUT 4)
+    uint8_t shift_offset;       // how far the shift register result is shifted (OUT 2)
+
     // Condition bits
     flags cond;
 

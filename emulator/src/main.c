@@ -9,7 +9,7 @@
 #include "input.h"
 #include "rom.h"
 
-const char* version_string = "0.0.3";
+const char* version_string = "0.1.0";
 const char* build_date = __DATE__;
 
 #define MAX_INTRO_LINES 14

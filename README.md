@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="logo.png" alt="8080 logo" width="480">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="logo-dark.svg">
+    <img src="logo.svg" alt="8080 logo" width="320">
+  </picture>
 </p>
 
 # 8080

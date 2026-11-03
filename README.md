@@ -7,8 +7,8 @@
 
 # 8080
 
-An emulator for the **Intel 8080**, the 8-bit microprocessor Intel
-released in 1974, built specifically to run the original 1978 *Space Invaders*
+An emulator for the **Intel 8080**, the 8-bit microprocessor released by Intel
+in 1974, built specifically to run the original 1978 *Space Invaders*
 arcade game.
 
 Space Invaders ran on 8080 hardware, so emulating the CPU — along with the
@@ -20,7 +20,7 @@ through a shader that imitates the curved glass of the original CRT.
 ## Status
 
 **Working:**
-- Most of the 8080 instruction set, decoded through the `execute()` loop
+- Most of the 8080 instruction set.
 - An SDL2-backed frame loop timed to the ~2 MHz CPU clock
 - The two per-frame video interrupts (RST 1 mid-screen, RST 2 VBlank)
 - Rendering the 1-bit-per-pixel framebuffer from VRAM (`0x2400`) to the window,
@@ -40,8 +40,7 @@ through a shader that imitates the curved glass of the original CRT.
 
 - A C99 compiler (`gcc` or `clang`)
 - SDL2 — `brew install sdl2` on macOS
-- macOS, for now: the CRT shader uses the system OpenGL 4.1 core profile, and
-  other platforms would need a GL function loader added
+- macOS (for now)
 
 ## Build & Run
 

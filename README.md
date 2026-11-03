@@ -14,7 +14,8 @@ arcade game.
 Space Invaders ran on 8080 hardware, so emulating the CPU — along with the
 cabinet's video interrupts and memory-mapped display — is enough to bring
 the game back to life. This project implements the 8080 instruction set in
-C99 and drives an SDL2 window that renders the game's video memory.
+C99 and drives an SDL2 window that renders the game's video memory, shown
+through a shader that imitates the curved glass of the original CRT.
 
 ## Status
 
@@ -22,16 +23,25 @@ C99 and drives an SDL2 window that renders the game's video memory.
 - Most of the 8080 instruction set, decoded through the `execute()` loop
 - An SDL2-backed frame loop timed to the ~2 MHz CPU clock
 - The two per-frame video interrupts (RST 1 mid-screen, RST 2 VBlank)
-- Rendering the 1-bit-per-pixel framebuffer from VRAM (`0x2400`) to the window
+- Rendering the 1-bit-per-pixel framebuffer from VRAM (`0x2400`) to the window,
+  rotated upright and scaled 3x
+- A CRT effect: an OpenGL shader gives the picture a curved, rounded-corner
+  screen with a bezel, a soft glow around bright pixels, a faint RGB stripe
+  pattern, a vignette, and a short afterglow behind moving sprites
+- Hardware I/O: `IN`/`OUT` ports for the player inputs and DIP switches, and
+  the bit-shift register the game uses to draw sprites
+- Player input from the keyboard and from game controllers (see
+  [Controls](#controls))
 
 **Not yet done:**
-- Hardware I/O ports (`IN`/`OUT`), including the bit-shift register
-- Sound and player input
+- Sound (the sound ports are read but ignored)
 
 ## Requirements
 
 - A C99 compiler (`gcc` or `clang`)
-- SDL2 — `brew install sdl2` on macOS, or `libsdl2-dev` on Debian/Ubuntu
+- SDL2 — `brew install sdl2` on macOS
+- macOS, for now: the CRT shader uses the system OpenGL 4.1 core profile, and
+  other platforms would need a GL function loader added
 
 ## Build & Run
 
@@ -55,6 +65,30 @@ Flags:
 - `--dumpregisters` — print register / PC / SP state after the window closes
 - `--about` — print version and build date
 
+### Controls
+
+Keyboard:
+
+| Action | Keys |
+| --- | --- |
+| Move left / right | `A` / `D`, or the left / right arrow keys |
+| Fire | `Space` |
+| Insert coin | `5` |
+| 1 player / 2 player start | `1` / `2` |
+| Quit | `Esc` |
+
+Game controller (Xbox, PlayStation, and anything else SDL recognises):
+
+| Action | Input |
+| --- | --- |
+| Move left / right | Left stick or d-pad |
+| Fire | Right trigger (RT on Xbox, R2 on PlayStation) |
+| Insert coin | Back (Create on a DualSense) |
+| 1 player start | Start (Options on a DualSense) |
+
+One controller is used at a time, and it can be plugged in while the emulator
+is running. The same inputs drive both players, since they take turns.
+
 ### Disassembler
 
 A standalone tool that prints a full disassembly listing of a ROM.
@@ -70,8 +104,10 @@ make build             # produces ./disasm
 
 ```
 emulator/src/
-  cpu.{c,h}      CPU state, instruction set, execute loop, interrupts
-  display.{c,h}  SDL window, framebuffer, video rendering
+  cpu.{c,h}      CPU state, instruction set, execute loop, interrupts, IN/OUT ports
+  display.{c,h}  SDL window, framebuffer, video rendering, splash screen
+  crt.{c,h}      OpenGL context and the CRT shader
+  input.{c,h}    keyboard and controller input, mapped to the cabinet's ports
   rom.{c,h}      ROM file loading
   main.c         entry point, frame loop, CLI args
   disasm.{c,h}   opcode-to-mnemonic table (trimmed copy of the standalone tool)

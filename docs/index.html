@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>8080 — an Intel 8080 emulator</title>
+    <meta name="description" content="An Intel 8080 emulator written in C, built to run the original 1978 Space Invaders arcade game, with a shader-based CRT effect." />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <main class="page">
+        <h1 class="logo">
+            <img src="images/logo.svg" alt="8080" />
+        </h1>
+
+        <figure class="screen">
+            <img src="images/screenshot.png" width="672" height="765"
+                 alt="Space Invaders running in the 8080 emulator, with a curved, glowing CRT picture" />
+        </figure>
+
+        <div class="text">
+            <p class="lede">
+                8080 is an emulator for the Intel 8080, the famous 8-bit microprocessor
+                released by Intel in 1974. It's designed to run the original
+                <em>Space Invaders</em> arcade game designed by Tomohiro Nishikado released in 1978.
+            </p>
+
+            <div class="download">
+                <a class="button" href="https://github.com/cianmarbo/8080/releases/download/v0.1.0-alpha/8080-v0.1.0-alpha-macos-arm64.tar.gz">Download v0.1.0-alpha</a>
+                <p class="note">
+                    macOS, Apple Silicon ·
+                    <a href="https://github.com/cianmarbo/8080/releases/tag/v0.1.0-alpha">Release notes</a>
+                </p>
+            </div>
+
+            <p class="links">
+                <a href="https://github.com/cianmarbo/8080">View on GitHub</a>
+                <a href="https://github.com/cianmarbo/8080/archive/refs/heads/main.zip">Download source</a>
+            </p>
+
+            <h2>Why?</h2>
+            <p>
+                I started this project primarily because I wanted to learn how
+                CPU's worked. While it started out as a small side project; implementing
+                a few Intel 8080 instructions to understand how they worked,
+                eventually I couldn't help myself and became determined to create
+                a fully fledged Space Invaders emulator! :D
+            </p>
+            <p>
+                Ultimately, my hope is this project inspires and helps others learn about computer architecture!
+            </p>
+
+            <h2>How it works</h2>
+            <p>
+                <em>Space Invaders</em> ran on an 8080 clocked at 2&nbsp;MHz, so
+                most of the work is the CPU itself: written in C99, it fetches,
+                decodes and executes the game's instructions one at a time, against a
+                flat 64&nbsp;KB of memory.
+            </p>
+            <p>
+                The rest is the cabinet around the CPU. Twice per frame the video
+                hardware interrupts the game, once mid-screen and once at VBlank,
+                and the game uses those moments to draw. Input arrives through
+                I/O ports, and a dedicated shift register moves sprites to any
+                horizontal pixel offset.
+            </p>
+            <p>
+                The picture lives in 7&nbsp;KB of video memory at one bit per pixel,
+                laid out for a CRT mounted on its side. Each frame it is rotated
+                upright and drawn through OpenGL.
+            </p>
+
+            <h2>The CRT</h2>
+            <p>
+                Two shader passes recreate the cabinet's tube. The first blends each
+                frame with a fading copy of the last, so moving pixels leave a
+                short phosphor trail. The second bends the picture into a curved
+                screen with rounded corners, then adds glow, a faint RGB stripe
+                mask and a vignette.
+            </p>
+
+            <h2>Build and run</h2>
+            <p>
+                The emulator is macOS only for now, and needs a C compiler and SDL2.
+                The game's ROMs aren't included, so you'll need to supply your own.
+            </p>
+            <pre><code>brew install sdl2
+cd emulator
+make build
+./8080 invaders.h invaders.g invaders.f invaders.e</code></pre>
+            <p>
+                <kbd>5</kbd> inserts a coin and <kbd>1</kbd> starts the game. Move
+                with <kbd>A</kbd> and <kbd>D</kbd> or the arrow keys, and fire with
+                <kbd>Space</kbd>. Game controllers work too. There's no sound yet.
+            </p>
+
+            <footer>
+                MIT licensed. Made by
+                <a href="https://cianmarbo.github.io">Cían Martin Bohan</a>.
+            </footer>
+        </div>
+    </main>
+
+    <div class="invaders" aria-hidden="true"></div>
+    <script src="invaders.js"></script>
+</body>
+</html>

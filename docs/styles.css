@@ -1,0 +1,218 @@
+:root {
+    --gutter: 48px;
+    --muted: #666;
+    --rule: #ddd;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #fff;
+    color: #000;
+    font: 17px/1.6 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+        "logo   screen"
+        "text   screen";
+    column-gap: 72px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: var(--gutter);
+}
+
+/* Logo: its top edge lines up with the top of the screenshot */
+.logo {
+    grid-area: logo;
+    margin: 0 0 48px;
+}
+
+.logo img {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+}
+
+/* Screenshot: stays in view while the text scrolls past */
+.screen {
+    grid-area: screen;
+    align-self: start;
+    position: sticky;
+    top: var(--gutter);
+    margin: 0;
+}
+
+.screen img {
+    display: block;
+    width: auto;
+    height: min(765px, calc(100vh - 2 * var(--gutter)));
+    aspect-ratio: 672 / 765;
+    border-radius: 10px;
+}
+
+.text {
+    grid-area: text;
+    max-width: 34em;
+}
+
+.text p {
+    margin: 0 0 1em;
+}
+
+.lede {
+    font-size: 21px;
+    line-height: 1.45;
+}
+
+.download {
+    margin-top: 28px;
+}
+
+.button {
+    display: inline-block;
+    padding: 12px 22px;
+    border-radius: 6px;
+    background: #000;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.button:hover {
+    background: #333;
+}
+
+.download .note {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.text .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin-top: 20px;
+}
+
+h2 {
+    margin: 40px 0 8px;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+a {
+    color: inherit;
+    text-underline-offset: 3px;
+}
+
+a:hover {
+    text-decoration-thickness: 2px;
+}
+
+pre {
+    margin: 0 0 1em;
+    padding: 16px 0;
+    overflow-x: auto;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+}
+
+code,
+kbd {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 14px;
+}
+
+kbd {
+    padding: 1px 5px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+}
+
+footer {
+    margin-top: 48px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+/* Invaders: turn up along the edges of the window, clear of any clicks */
+.invaders {
+    --pixel: 3px;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    mix-blend-mode: difference;   /* black on the page, but inverts any text it crosses */
+}
+
+/* Each appearance is a spot, placed and turned by invaders.js to stand on an edge */
+.spot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    transform-origin: 0 0;
+}
+
+.invaders svg {
+    display: block;
+    width: calc(var(--pixels) * var(--pixel));
+    height: calc(8 * var(--pixel));
+    fill: #fff;
+}
+
+.invaders g:last-child,
+.invaders.alternate g:first-child {
+    display: none;
+}
+
+.invaders.alternate g:last-child {
+    display: inline;
+}
+
+/* Narrow screens: logo, screenshot, then text */
+@media (max-width: 960px) {
+    :root {
+        --gutter: 24px;
+    }
+
+    .page {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        grid-template-areas:
+            "logo"
+            "screen"
+            "text";
+    }
+
+    .logo {
+        margin-bottom: 32px;
+    }
+
+    .screen {
+        position: static;
+        margin-bottom: 32px;
+    }
+
+    .screen img {
+        width: 100%;
+        max-width: 672px;
+        height: auto;
+    }
+
+    .text {
+        max-width: none;
+    }
+}

@@ -54,8 +54,8 @@ body {
 .screen img {
     display: block;
     width: auto;
-    height: min(765px, calc(100vh - 2 * var(--gutter)));
-    aspect-ratio: 672 / 765;
+    height: min(755px, calc(100vh - 2 * var(--gutter)));
+    aspect-ratio: 667 / 755;
     border-radius: 10px;
 }
 
@@ -208,7 +208,7 @@ footer {
 
     .screen img {
         width: 100%;
-        max-width: 672px;
+        max-width: 667px;
         height: auto;
     }
 
